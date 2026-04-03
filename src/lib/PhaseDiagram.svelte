@@ -953,8 +953,23 @@
     let touchTapTimer: ReturnType<typeof setTimeout> | null = null;
     let isTouchDragging = $state(false);
 
+    function isInsidePlotArea(svgX: number, svgY: number): boolean {
+        return (
+            svgX >= margin.left &&
+            svgX <= margin.left + plotWidth() &&
+            svgY >= margin.top &&
+            svgY <= margin.top + plotHeight()
+        );
+    }
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+
     function handleTouchStart(event: TouchEvent) {
-        event.preventDefault();
+        if (event.touches.length === 1) {
+            touchStartX = event.touches[0].clientX;
+            touchStartY = event.touches[0].clientY;
+        }
         if (event.touches.length === 2) {
             const dx = event.touches[0].clientX - event.touches[1].clientX;
             const dy = event.touches[0].clientY - event.touches[1].clientY;
@@ -986,6 +1001,13 @@
     }
 
     function handleTouchMove(event: TouchEvent) {
+        if (event.touches.length === 1) {
+            const dx = Math.abs(event.touches[0].clientX - touchStartX);
+            const dy = Math.abs(event.touches[0].clientY - touchStartY);
+            if (dy > dx) {
+                return;
+            }
+        }
         event.preventDefault();
         if (event.touches.length === 2) {
             const dx = event.touches[0].clientX - event.touches[1].clientX;
