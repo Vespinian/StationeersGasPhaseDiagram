@@ -227,6 +227,14 @@ h2 {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+    .chart-wrapper {
+        padding: 0;
+    }
 }
 
 .chart-wrapper canvas {

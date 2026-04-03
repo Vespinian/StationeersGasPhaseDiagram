@@ -813,6 +813,12 @@
         }
     }
 
+    function doZoomX(svgX: number, factor: number) {
+        const newTempRange = (viewTempMax - viewTempMin) * factor;
+        viewTempMin = svgX - (svgX - viewTempMin) * factor;
+        viewTempMax = viewTempMin + newTempRange;
+    }
+
     function handleMouseMove(event: MouseEvent) {
         const { x: svgX, y: svgY } = getSvgCoords(event.clientX, event.clientY);
 
@@ -995,7 +1001,13 @@
                 event.touches[0].clientX,
                 event.touches[0].clientY,
             );
-            startInteraction(svgX, svgY);
+            isPanning = true;
+            panStartSvgX = svgX;
+            panStartSvgY = svgY;
+            panStartViewTempMin = viewTempMin;
+            panStartViewTempMax = viewTempMax;
+            panStartViewPressMin = viewPressMin;
+            panStartViewPressMax = viewPressMax;
             isTouchDragging = false;
         }
     }
@@ -1021,8 +1033,7 @@
 
             if (lastTouchDistance > 0) {
                 const factor = lastTouchDistance / dist;
-                const zoomingOut = dist > lastTouchDistance;
-                doZoom(svgX, svgY, factor, zoomingOut);
+                doZoomX(svgX, factor);
                 doPan(svgX, svgY);
                 panStartSvgX = svgX;
                 panStartSvgY = svgY;
