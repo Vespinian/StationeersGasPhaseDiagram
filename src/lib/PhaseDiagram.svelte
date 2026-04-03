@@ -1068,7 +1068,7 @@
             viewTempMin = tempMin;
             viewTempMax = tempMax;
         }
-        viewPressMin = pressureMin;
+        viewPressMin = logScale ? 5 : pressureMin;
         viewPressMax = logScale ? 10000 : 6500;
         updateLockedPosition();
         drawGraph();
@@ -1103,7 +1103,7 @@
             viewPressMin = pressureMin;
         } else if (!prevLogScale && logScale) {
             viewPressMax = 10000;
-            viewPressMin = 0.1;
+            viewPressMin = 5;
         }
         prevLogScale = logScale;
         drawGraph();
