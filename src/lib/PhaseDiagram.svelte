@@ -60,6 +60,7 @@
                 JSON.stringify({
                     showGrid,
                     logScale,
+                    logXScale,
                     invertPanY,
                     theme,
                     visibleGases,
@@ -76,6 +77,7 @@
 
     let showGrid = $state(saved?.showGrid ?? true);
     let logScale = $state(saved?.logScale ?? false);
+    let logXScale = $state(saved?.logXScale ?? false);
     let invertPanY = $state(saved?.invertPanY ?? true);
     let theme = $state<"stationeers" | "light" | "dark">(
         saved?.theme ?? "stationeers",
@@ -159,7 +161,7 @@
     const tempMax = $derived.by(() => calcTempMax());
 
     const pressureMin = 0.1;
-    const pressureMax = 7500;
+    const pressureMax = 6500;
 
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
@@ -183,6 +185,15 @@
     }
 
     function scaleX(tempK: number): number {
+        if (logXScale) {
+            const logMin = Math.log10(Math.max(10, viewTempMin));
+            const logMax = Math.log10(Math.max(10, viewTempMax));
+            const logT = Math.log10(Math.max(10, tempK));
+            return (
+                margin.left +
+                ((logT - logMin) / (logMax - logMin)) * plotWidth()
+            );
+        }
         return (
             margin.left +
             ((tempK - viewTempMin) / (viewTempMax - viewTempMin)) * plotWidth()
@@ -209,6 +220,12 @@
     }
 
     function invScaleX(svgX: number): number {
+        if (logXScale) {
+            const logMin = Math.log10(Math.max(10, viewTempMin));
+            const logMax = Math.log10(Math.max(10, viewTempMax));
+            const ratio = (svgX - margin.left) / plotWidth();
+            return Math.pow(10, logMin + ratio * (logMax - logMin));
+        }
         return (
             viewTempMin +
             ((svgX - margin.left) / plotWidth()) * (viewTempMax - viewTempMin)
@@ -364,7 +381,9 @@
 
         // Grid
         if (showGrid) {
-            const xTicks = generateTicks(viewTempMin, viewTempMax);
+            const xTicks = logXScale
+                ? generateLogTicks(viewTempMin, viewTempMax)
+                : generateTicks(viewTempMin, viewTempMax);
             const yTicks = logScale
                 ? generateLogTicks(viewPressMin, viewPressMax)
                 : generateTicks(viewPressMin, viewPressMax);
@@ -539,7 +558,9 @@
         ctx.stroke();
 
         // X axis ticks
-        const xTicks = generateTicks(viewTempMin, viewTempMax);
+        const xTicks = logXScale
+            ? generateLogTicks(viewTempMin, viewTempMax)
+            : generateTicks(viewTempMin, viewTempMax);
         ctx.fillStyle = t.tickText;
         ctx.font = "14px sans-serif";
         ctx.textAlign = "center";
@@ -704,24 +725,45 @@
 
     function doRescaleX(svgX: number) {
         const dx = svgX - rescaleStartSvgX;
-        const factor = 1 + dx / plotWidth();
-        const newRange = (rescaleStartTempMax - rescaleStartTempMin) * factor;
-        viewTempMin = rescaleStartTempMin;
-        viewTempMax = rescaleStartTempMin + newRange;
+        if (logXScale) {
+            const logMin = Math.log10(Math.max(10, rescaleStartTempMin));
+            const logMax = Math.log10(Math.max(10, rescaleStartTempMax));
+            const logRange = logMax - logMin;
+            const dLog = (dx / plotWidth()) * logRange;
+            const newLogMin = logMin + dLog;
+            const newLogMax = logMax + dLog;
+            viewTempMin = Math.max(10, Math.pow(10, newLogMin));
+            viewTempMax = Math.pow(10, newLogMax);
+        } else {
+            const factor = 1 + dx / plotWidth();
+            const newRange =
+                (rescaleStartTempMax - rescaleStartTempMin) * factor;
+            viewTempMin = rescaleStartTempMin;
+            viewTempMax = rescaleStartTempMin + newRange;
+        }
     }
 
     function doPan(svgX: number, svgY: number) {
-        const tempDelta =
-            panStartViewTempMin -
-            ((svgX - panStartSvgX) / plotWidth()) *
-                (panStartViewTempMax - panStartViewTempMin);
-        const range = panStartViewTempMax - panStartViewTempMin;
-        viewTempMin = tempDelta;
-        viewTempMax = tempDelta + range;
+        const dx = (svgX - panStartSvgX) / plotWidth();
+        if (logXScale) {
+            const logMin = Math.log10(Math.max(10, panStartViewTempMin));
+            const logMax = Math.log10(Math.max(10, panStartViewTempMax));
+            const logRange = logMax - logMin;
+            const dLog = dx * logRange;
+            viewTempMin = Math.max(10, Math.pow(10, logMin - dLog));
+            viewTempMax = Math.pow(10, logMax - dLog);
+        } else {
+            const tempDelta =
+                panStartViewTempMin -
+                dx * (panStartViewTempMax - panStartViewTempMin);
+            const range = panStartViewTempMax - panStartViewTempMin;
+            viewTempMin = tempDelta;
+            viewTempMax = tempDelta + range;
+        }
 
         const dy = (svgY - panStartSvgY) / plotHeight();
         const direction = invertPanY ? 1 : -1;
-        const maxPress = logScale ? 10000 : 7500;
+        const maxPress = logScale ? 10000 : 6500;
 
         if (logScale) {
             const logMin = Math.log10(panStartViewPressMin);
@@ -778,11 +820,27 @@
         const tempAtCursor =
             isLocked && lockedTemp !== null ? lockedTemp : invScaleX(svgX);
         const pressAtCursor = invScaleY(svgY);
-        const maxPress = logScale ? 10000 : 7500;
+        const maxPress = logScale ? 10000 : 6500;
 
-        const newTempRange = (viewTempMax - viewTempMin) * factor;
-        viewTempMin = tempAtCursor - (tempAtCursor - viewTempMin) * factor;
-        viewTempMax = viewTempMin + newTempRange;
+        if (logXScale) {
+            const logMin = Math.log10(Math.max(10, viewTempMin));
+            const logMax = Math.log10(Math.max(10, viewTempMax));
+            const logAtCursor = Math.log10(Math.max(10, tempAtCursor));
+            const logRange = logMax - logMin;
+            const newLogRange = logRange * factor;
+            const offset = logAtCursor - logMin;
+            const newLogMin = logAtCursor - offset * factor;
+            const newLogMax = newLogMin + newLogRange;
+            viewTempMin = Math.max(10, Math.pow(10, newLogMin));
+            viewTempMax = Math.pow(10, newLogMax);
+        } else {
+            const tempRange = viewTempMax - viewTempMin;
+            const newTempRange = tempRange * factor;
+            const offset = tempAtCursor - viewTempMin;
+            const newOffset = offset * factor;
+            viewTempMin = tempAtCursor - newOffset;
+            viewTempMax = viewTempMin + newTempRange;
+        }
 
         if (zoomingOut && viewPressMax >= maxPress) {
         } else {
@@ -796,7 +854,7 @@
 
     function doZoomY(svgY: number, factor: number, zoomingOut: boolean) {
         const pressAtCursor = invScaleY(svgY);
-        const maxPress = logScale ? 10000 : 7500;
+        const maxPress = logScale ? 10000 : 6500;
 
         if (zoomingOut && viewPressMax >= maxPress) {
         } else {
@@ -976,9 +1034,22 @@
         const zoomingOut = event.deltaY > 0;
 
         if (event.ctrlKey) {
-            const newTempRange = (viewTempMax - viewTempMin) * factor;
-            viewTempMin = svgX - (svgX - viewTempMin) * factor;
-            viewTempMax = viewTempMin + newTempRange;
+            if (logXScale) {
+                const logMin = Math.log10(Math.max(10, viewTempMin));
+                const logMax = Math.log10(Math.max(10, viewTempMax));
+                const logAtSvgX = Math.log10(Math.max(10, invScaleX(svgX)));
+                const logRange = logMax - logMin;
+                const newLogRange = logRange * factor;
+                const offset = logAtSvgX - logMin;
+                const newLogMin = logAtSvgX - offset * factor;
+                const newLogMax = newLogMin + newLogRange;
+                viewTempMin = Math.max(10, Math.pow(10, newLogMin));
+                viewTempMax = Math.pow(10, newLogMax);
+            } else {
+                const newTempRange = (viewTempMax - viewTempMin) * factor;
+                viewTempMin = svgX - (svgX - viewTempMin) * factor;
+                viewTempMax = viewTempMin + newTempRange;
+            }
         } else if (event.shiftKey) {
             doZoomY(svgY, factor, zoomingOut);
         } else {
@@ -990,8 +1061,13 @@
     }
 
     function resetView() {
-        viewTempMin = tempMin;
-        viewTempMax = tempMax;
+        if (logXScale) {
+            viewTempMin = 10;
+            viewTempMax = visibleGases["NaCl"] ? 5000 : 1000;
+        } else {
+            viewTempMin = tempMin;
+            viewTempMax = tempMax;
+        }
         viewPressMin = pressureMin;
         viewPressMax = logScale ? 10000 : 6500;
         updateLockedPosition();
@@ -1018,6 +1094,7 @@
     });
 
     let prevLogScale = $state(false);
+    let prevLogXScale = $state(false);
     let showHelp = $state(false);
 
     $effect(() => {
@@ -1029,6 +1106,18 @@
             viewPressMin = 0.1;
         }
         prevLogScale = logScale;
+        drawGraph();
+    });
+
+    $effect(() => {
+        if (prevLogXScale && !logXScale) {
+            viewTempMin = tempMin;
+            viewTempMax = tempMax;
+        } else if (!prevLogXScale && logXScale) {
+            viewTempMin = 10;
+            viewTempMax = visibleGases["NaCl"] ? 5000 : 1000;
+        }
+        prevLogXScale = logXScale;
         drawGraph();
     });
 
@@ -1054,6 +1143,7 @@
     $effect(() => {
         void showGrid;
         void logScale;
+        void logXScale;
         void invertPanY;
         void visibleGases;
         void sortKey;
@@ -1099,7 +1189,11 @@
         </label>
         <label>
             <input type="checkbox" bind:checked={logScale} />
-            Log Scale
+            Log Y Scale
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={logXScale} />
+            Log X Scale
         </label>
         <label>
             <input type="checkbox" bind:checked={invertPanY} />
