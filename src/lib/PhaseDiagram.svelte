@@ -579,6 +579,19 @@
         ctx.lineTo(margin.left + plotWidth(), margin.top + plotHeight());
         ctx.stroke();
 
+        // 0 kPa line
+        const zeroY = scaleY(0);
+        if (zeroY >= margin.top && zeroY <= margin.top + plotHeight()) {
+            ctx.strokeStyle = "#ff4444";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([8, 4]);
+            ctx.beginPath();
+            ctx.moveTo(margin.left, zeroY);
+            ctx.lineTo(margin.left + plotWidth(), zeroY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
         // X axis ticks
         const xTicks = logXScale
             ? generateLogTicks(viewTempMin, viewTempMax)
@@ -785,23 +798,21 @@
 
         const dy = (svgY - panStartSvgY) / plotHeight();
         const direction = invertPanY ? 1 : -1;
-        const maxPress = logScale ? 10000 : 6500;
 
         if (logScale) {
             const logMin = Math.log10(panStartViewPressMin);
             const logMax = Math.log10(panStartViewPressMax);
             const logRange = logMax - logMin;
             const dLog = dy * logRange * direction;
-            viewPressMin = Math.max(0.01, Math.pow(10, logMin + dLog));
-            viewPressMax = Math.min(maxPress, Math.pow(10, logMax + dLog));
+            viewPressMin = Math.pow(10, logMin + dLog);
+            viewPressMax = Math.pow(10, logMax + dLog);
         } else {
             const pressDelta =
                 dy * (panStartViewPressMax - panStartViewPressMin) * direction;
             const pRange = panStartViewPressMax - panStartViewPressMin;
             let newPressMin = panStartViewPressMin + pressDelta;
-            newPressMin = Math.max(0.01, newPressMin);
             viewPressMin = newPressMin;
-            viewPressMax = Math.min(maxPress, newPressMin + pRange);
+            viewPressMax = newPressMin + pRange;
         }
     }
 
@@ -842,18 +853,17 @@
         const tempAtCursor =
             isLocked && lockedTemp !== null ? lockedTemp : invScaleX(svgX);
         const pressAtCursor = invScaleY(svgY);
-        const maxPress = logScale ? 10000 : 6500;
 
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, viewTempMin));
-            const logMax = Math.log10(Math.max(10, viewTempMax));
-            const logAtCursor = Math.log10(Math.max(10, tempAtCursor));
+            const logMin = Math.log10(viewTempMin);
+            const logMax = Math.log10(viewTempMax);
+            const logAtCursor = Math.log10(tempAtCursor);
             const logRange = logMax - logMin;
             const newLogRange = logRange * factor;
             const offset = logAtCursor - logMin;
             const newLogMin = logAtCursor - offset * factor;
             const newLogMax = newLogMin + newLogRange;
-            viewTempMin = Math.max(10, Math.pow(10, newLogMin));
+            viewTempMin = Math.pow(10, newLogMin);
             viewTempMax = Math.pow(10, newLogMax);
         } else {
             const tempRange = viewTempMax - viewTempMin;
@@ -864,27 +874,46 @@
             viewTempMax = viewTempMin + newTempRange;
         }
 
-        if (zoomingOut && viewPressMax >= maxPress) {
+        if (logScale) {
+            const logMin = Math.log10(viewPressMin);
+            const logMax = Math.log10(viewPressMax);
+            const logAtCursor = Math.log10(pressAtCursor);
+            const logRange = logMax - logMin;
+            const newLogRange = logRange * factor;
+            const offset = logAtCursor - logMin;
+            const newLogMin = logAtCursor - offset * factor;
+            const newLogMax = newLogMin + newLogRange;
+            viewPressMin = Math.pow(10, newLogMin);
+            viewPressMax = Math.pow(10, newLogMax);
         } else {
             const newPressRange = (viewPressMax - viewPressMin) * factor;
             const newPressMin =
                 pressAtCursor - (pressAtCursor - viewPressMin) * factor;
-            viewPressMin = Math.max(0.01, newPressMin);
-            viewPressMax = Math.min(maxPress, viewPressMin + newPressRange);
+            viewPressMin = newPressMin;
+            viewPressMax = viewPressMin + newPressRange;
         }
     }
 
     function doZoomY(svgY: number, factor: number, zoomingOut: boolean) {
         const pressAtCursor = invScaleY(svgY);
-        const maxPress = logScale ? 10000 : 6500;
 
-        if (zoomingOut && viewPressMax >= maxPress) {
+        if (logScale) {
+            const logMin = Math.log10(viewPressMin);
+            const logMax = Math.log10(viewPressMax);
+            const logAtCursor = Math.log10(pressAtCursor);
+            const logRange = logMax - logMin;
+            const newLogRange = logRange * factor;
+            const offset = logAtCursor - logMin;
+            const newLogMin = logAtCursor - offset * factor;
+            const newLogMax = newLogMin + newLogRange;
+            viewPressMin = Math.pow(10, newLogMin);
+            viewPressMax = Math.pow(10, newLogMax);
         } else {
             const newPressRange = (viewPressMax - viewPressMin) * factor;
             const newPressMin =
                 pressAtCursor - (pressAtCursor - viewPressMin) * factor;
-            viewPressMin = Math.max(0.01, newPressMin);
-            viewPressMax = Math.min(maxPress, viewPressMin + newPressRange);
+            viewPressMin = newPressMin;
+            viewPressMax = viewPressMin + newPressRange;
         }
     }
 
