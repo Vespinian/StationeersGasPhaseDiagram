@@ -43,8 +43,6 @@
         PWa: pollutedwaterIcon,
     };
 
-    const STORAGE_KEY = "stationeers-gas-diagram-state";
-
     function loadFromUrl() {
         try {
             const hash = window.location.hash.slice(1);
@@ -63,10 +61,6 @@
             } catch {}
             return urlState;
         }
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) return JSON.parse(raw);
-        } catch {}
         return null;
     }
 
@@ -90,12 +84,16 @@
             shareUrl = window.location.origin + window.location.pathname + "#" + encoded;
             history.replaceState(null, "", window.location.pathname);
         } catch {}
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        } catch {}
     }
 
     const saved = loadState();
+
+    // Force initial save after everything is mounted
+    $effect(() => {
+        if (canvas) {
+            requestAnimationFrame(() => saveState());
+        }
+    });
 
     let showGrid = $state(saved?.showGrid ?? true);
     let logScale = $state(saved?.logScale ?? false);
@@ -1164,15 +1162,15 @@
     });
 
     async function copyShare() {
-        showShareUrl = true;
         try {
             await navigator.clipboard.writeText(shareUrl);
             shareText = "Copied!";
-            setTimeout(function() { shareText = "Share"; }, 1500);
-        } catch (e) {
-            shareText = "Failed";
-            setTimeout(function() { shareText = "Share"; }, 1500);
+        } catch {
+            showShareUrl = true;
+            shareText = "Select URL below";
+            return;
         }
+        setTimeout(function() { shareText = "Share"; }, 1500);
     }
 
     $effect(() => {
@@ -1319,8 +1317,14 @@
 
     {#if showShareUrl}
         <div class="share-row">
-            <input type="text" readonly value={shareUrl} class="share-url" />
-            <button onclick={() => (showShareUrl = false)} class="share-close">×</button>
+            <input 
+                type="text" 
+                readonly 
+                value={shareUrl} 
+                class="share-url" 
+                onclick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <button onclick={() => { showShareUrl = false; shareText = "Share"; }} class="share-close">×</button>
         </div>
     {/if}
 
