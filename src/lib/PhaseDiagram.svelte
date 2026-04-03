@@ -976,135 +976,25 @@
             touchStartX = event.touches[0].clientX;
             touchStartY = event.touches[0].clientY;
         }
-        if (event.touches.length === 2) {
-            const dx = event.touches[0].clientX - event.touches[1].clientX;
-            const dy = event.touches[0].clientY - event.touches[1].clientY;
-            lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
-            isPanning = true;
-            const midX =
-                (event.touches[0].clientX + event.touches[1].clientX) / 2;
-            const midY =
-                (event.touches[0].clientY + event.touches[1].clientY) / 2;
-            const { x: svgX, y: svgY } = getSvgCoords(midX, midY);
-            panStartSvgX = svgX;
-            panStartSvgY = svgY;
-            panStartViewTempMin = viewTempMin;
-            panStartViewTempMax = viewTempMax;
-            panStartViewPressMin = viewPressMin;
-            panStartViewPressMax = viewPressMax;
-        } else if (event.touches.length === 1) {
-            if (touchTapTimer) {
-                clearTimeout(touchTapTimer);
-                touchTapTimer = null;
-            }
-            const { x: svgX, y: svgY } = getSvgCoords(
-                event.touches[0].clientX,
-                event.touches[0].clientY,
-            );
-            isPanning = true;
-            panStartSvgX = svgX;
-            panStartSvgY = svgY;
-            panStartViewTempMin = viewTempMin;
-            panStartViewTempMax = viewTempMax;
-            panStartViewPressMin = viewPressMin;
-            panStartViewPressMax = viewPressMax;
-            isTouchDragging = false;
-        }
     }
 
     function handleTouchMove(event: TouchEvent) {
         if (event.touches.length === 1) {
-            const dx = Math.abs(event.touches[0].clientX - touchStartX);
-            const dy = Math.abs(event.touches[0].clientY - touchStartY);
-            if (dy > dx) {
-                return;
-            }
-        }
-        event.preventDefault();
-        if (event.touches.length === 2) {
-            const dx = event.touches[0].clientX - event.touches[1].clientX;
-            const dy = event.touches[0].clientY - event.touches[1].clientY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const midX =
-                (event.touches[0].clientX + event.touches[1].clientX) / 2;
-            const midY =
-                (event.touches[0].clientY + event.touches[1].clientY) / 2;
-            const { x: svgX, y: svgY } = getSvgCoords(midX, midY);
-
-            if (lastTouchDistance > 0) {
-                const factor = lastTouchDistance / dist;
-                doZoomX(svgX, factor);
-                doPan(svgX, svgY);
-                panStartSvgX = svgX;
-                panStartSvgY = svgY;
-                panStartViewTempMin = viewTempMin;
-                panStartViewTempMax = viewTempMax;
-                panStartViewPressMin = viewPressMin;
-                panStartViewPressMax = viewPressMax;
-                updateLockedPosition();
-                drawGraph();
-            }
-            lastTouchDistance = dist;
-        } else if (event.touches.length === 1) {
-            const { x: svgX, y: svgY } = getSvgCoords(
+            const { x: svgX } = getSvgCoords(
                 event.touches[0].clientX,
                 event.touches[0].clientY,
             );
-
-            if (isRescalingY) {
-                doRescaleY(svgY);
-                updateLockedPosition();
-                updateHoverCursor(svgX);
-                isTouchDragging = true;
-                drawGraph();
-            } else if (isRescalingX) {
-                doRescaleX(svgX);
-                updateLockedPosition();
-                updateHoverCursor(svgX);
-                isTouchDragging = true;
-                drawGraph();
-            } else if (isPanning) {
-                doPan(svgX, svgY);
-                updateLockedPosition();
-                updateHoverCursor(svgX);
-                isTouchDragging = true;
-                drawGraph();
+            if (!doHover(svgX)) {
+                hoveredX = null;
+                hoveredTemp = null;
+                hoveredValues = [];
             }
+            drawGraph();
         }
     }
 
     function handleTouchEnd(event: TouchEvent) {
-        if (event.touches.length === 0) {
-            if (!isTouchDragging) {
-                const { x: svgX } = getSvgCoords(
-                    event.changedTouches[0].clientX,
-                    event.changedTouches[0].clientY,
-                );
-                if (!doHover(svgX)) {
-                    hoveredX = null;
-                    hoveredTemp = null;
-                    hoveredValues = [];
-                }
-                drawGraph();
-            }
-            isPanning = false;
-            isRescalingY = false;
-            isRescalingX = false;
-            isTouchDragging = false;
-            lastTouchDistance = 0;
-        } else if (event.touches.length === 1) {
-            lastTouchDistance = 0;
-            const { x: svgX, y: svgY } = getSvgCoords(
-                event.touches[0].clientX,
-                event.touches[0].clientY,
-            );
-            panStartSvgX = svgX;
-            panStartSvgY = svgY;
-            panStartViewTempMin = viewTempMin;
-            panStartViewTempMax = viewTempMax;
-            panStartViewPressMin = viewPressMin;
-            panStartViewPressMax = viewPressMax;
-        }
+        // Leave tooltip visible
     }
 
     function handleWheel(event: WheelEvent) {
@@ -1290,13 +1180,6 @@
                 <li>
                     <strong>Click column headers</strong> — Sort the legend table
                 </li>
-            </ul>
-            <h3>Touch Controls</h3>
-            <ul>
-                <li><strong>Pinch</strong> — Zoom both axes</li>
-                <li><strong>Drag</strong> — Pan the view</li>
-                <li><strong>Drag axis labels</strong> — Rescale that axis</li>
-                <li><strong>Tap</strong> — Show tooltip at position</li>
             </ul>
         </div>
     {/if}
