@@ -794,12 +794,7 @@
         }
     }
 
-    function doZoomY(
-        svgX: number,
-        svgY: number,
-        factor: number,
-        zoomingOut: boolean,
-    ) {
+    function doZoomY(svgY: number, factor: number, zoomingOut: boolean) {
         const pressAtCursor = invScaleY(svgY);
         const maxPress = logScale ? 10000 : 7500;
 
@@ -811,12 +806,6 @@
             viewPressMin = Math.max(0.01, newPressMin);
             viewPressMax = Math.min(maxPress, viewPressMin + newPressRange);
         }
-    }
-
-    function doZoomX(svgX: number, factor: number) {
-        const newTempRange = (viewTempMax - viewTempMin) * factor;
-        viewTempMin = svgX - (svgX - viewTempMin) * factor;
-        viewTempMax = viewTempMin + newTempRange;
     }
 
     function handleMouseMove(event: MouseEvent) {
@@ -954,20 +943,6 @@
         isRescalingX = false;
     }
 
-    // Touch state
-    let lastTouchDistance = $state(0);
-    let touchTapTimer: ReturnType<typeof setTimeout> | null = null;
-    let isTouchDragging = $state(false);
-
-    function isInsidePlotArea(svgX: number, svgY: number): boolean {
-        return (
-            svgX >= margin.left &&
-            svgX <= margin.left + plotWidth() &&
-            svgY >= margin.top &&
-            svgY <= margin.top + plotHeight()
-        );
-    }
-
     let touchStartX = 0;
     let touchStartY = 0;
 
@@ -993,10 +968,6 @@
         }
     }
 
-    function handleTouchEnd(event: TouchEvent) {
-        // Leave tooltip visible
-    }
-
     function handleWheel(event: WheelEvent) {
         event.preventDefault();
         const { x: svgX, y: svgY } = getSvgCoords(event.clientX, event.clientY);
@@ -1009,7 +980,7 @@
             viewTempMin = svgX - (svgX - viewTempMin) * factor;
             viewTempMax = viewTempMin + newTempRange;
         } else if (event.shiftKey) {
-            doZoomY(svgX, svgY, factor, zoomingOut);
+            doZoomY(svgY, factor, zoomingOut);
         } else {
             doZoom(svgX, svgY, factor, zoomingOut);
         }
@@ -1195,7 +1166,6 @@
             onmouseenter={handleCanvasMouseOver}
             ontouchstart={handleTouchStart}
             ontouchmove={handleTouchMove}
-            ontouchend={handleTouchEnd}
             class:panning={isPanning}
             class:rescale-y={isRescalingY}
             class:rescale-x={isRescalingX}
