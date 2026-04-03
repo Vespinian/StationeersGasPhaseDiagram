@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="text-scale" content="scale" />
+		<title>Gas Phase Diagram</title>
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<script>
+			(function() {
+				try {
+					var raw = localStorage.getItem("stationeers-gas-diagram-state");
+					if (raw) {
+						var state = JSON.parse(raw);
+						if (state.theme === "light") {
+							document.documentElement.classList.add("light-mode");
+						} else if (state.theme === "dark") {
+							document.documentElement.classList.add("dark-mode");
+						}
+					}
+				} catch(e) {}
+			})();
+		</script>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+		<script>
+			(function() {
+				try {
+					var raw = localStorage.getItem("stationeers-gas-diagram-state");
+					if (raw) {
+						var state = JSON.parse(raw);
+						if (state.theme) {
+							var setSelect = function() {
+								var sel = document.querySelector(".theme-select");
+								if (sel) sel.value = state.theme;
+							};
+							setSelect();
+							requestAnimationFrame(setSelect);
+						}
+					}
+				} catch(e) {}
+			})();
+		</script>
+	</body>
+</html>
