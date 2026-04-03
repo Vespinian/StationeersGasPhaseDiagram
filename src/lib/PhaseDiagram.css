@@ -83,6 +83,51 @@ h2 {
     background: #111;
 }
 
+.share-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.share-url {
+    width: 80%;
+    max-width: 600px;
+    padding: 8px 12px;
+    border: 1px solid rgba(100, 140, 200, 0.2);
+    border-radius: 4px;
+    background: #1e2a3d;
+    color: #b8c8e0;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+.share-close {
+    background: transparent;
+    border: none;
+    color: #b8c8e0;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.share-close:hover {
+    color: #fff;
+}
+
+.light-mode .share-url {
+    background: #f2f2f2;
+    color: #202122;
+    border-color: #a2a9b1;
+}
+
+.dark-mode .share-url {
+    background: #111;
+    color: #ccc;
+    border-color: #444;
+}
+
 .controls label {
     display: flex;
     align-items: center;
@@ -167,6 +212,16 @@ h2 {
     cursor: pointer;
     font-size: 13px;
     font-weight: bold;
+}
+
+.share-btn {
+    background: #25334a;
+    color: #b8c8e0;
+    border: 1px solid rgba(100, 140, 200, 0.2);
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
 }
 
 .light-mode .help-btn {

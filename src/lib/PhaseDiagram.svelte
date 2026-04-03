@@ -45,7 +45,24 @@
 
     const STORAGE_KEY = "stationeers-gas-diagram-state";
 
+    function loadFromUrl() {
+        try {
+            const hash = window.location.hash.slice(1);
+            if (!hash) return null;
+            return JSON.parse(decodeURIComponent(atob(hash)));
+        } catch {}
+        return null;
+    }
+
     function loadState() {
+        const urlState = loadFromUrl();
+        if (urlState) {
+            try {
+                const encoded = btoa(encodeURIComponent(JSON.stringify(urlState)));
+                shareUrl = window.location.origin + window.location.pathname + "#" + encoded;
+            } catch {}
+            return urlState;
+        }
         try {
             const raw = localStorage.getItem(STORAGE_KEY);
             if (raw) return JSON.parse(raw);
@@ -54,22 +71,27 @@
     }
 
     function saveState() {
+        const state = {
+            showGrid,
+            logScale,
+            logXScale,
+            invertPanY,
+            theme,
+            visibleGases,
+            viewTempMin,
+            viewTempMax,
+            viewPressMin,
+            viewPressMax,
+            isLocked,
+            lockedTemp,
+        };
         try {
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify({
-                    showGrid,
-                    logScale,
-                    logXScale,
-                    invertPanY,
-                    theme,
-                    visibleGases,
-                    viewTempMin,
-                    viewTempMax,
-                    viewPressMin,
-                    viewPressMax,
-                }),
-            );
+            const encoded = btoa(encodeURIComponent(JSON.stringify(state)));
+            shareUrl = window.location.origin + window.location.pathname + "#" + encoded;
+            history.replaceState(null, "", window.location.pathname);
+        } catch {}
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         } catch {}
     }
 
@@ -1096,6 +1118,33 @@
     let prevLogScale = $state(false);
     let prevLogXScale = $state(false);
     let showHelp = $state(false);
+    let shareText = $state("Share");
+    let shareUrl = $state("");
+    let showShareUrl = $state(false);
+
+    $effect(() => {
+        if (!shareUrl) {
+            try {
+                const hash = window.location.hash.slice(1);
+                if (hash) {
+                    const state = JSON.parse(decodeURIComponent(atob(hash)));
+                    shareUrl = window.location.origin + window.location.pathname + "#" + hash;
+                }
+            } catch {}
+        }
+    });
+
+    async function copyShare() {
+        showShareUrl = true;
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            shareText = "Copied!";
+            setTimeout(function() { shareText = "Share"; }, 1500);
+        } catch (e) {
+            shareText = "Failed";
+            setTimeout(function() { shareText = "Share"; }, 1500);
+        }
+    }
 
     $effect(() => {
         if (prevLogScale && !logScale) {
@@ -1140,6 +1189,31 @@
         return () => window.removeEventListener("resize", resizeCanvas);
     });
 
+    let initLock = $state(false);
+    let initSave = $state(true);
+
+    $effect(() => {
+        if (!canvas || initLock) return;
+        if (saved?.isLocked && typeof saved?.lockedTemp === 'number') {
+            initSave = false;
+            isLocked = true;
+            const temp = saved.lockedTemp as number;
+            lockedTemp = temp;
+            const values: { gasKey: string; value: number }[] = [];
+            for (const [key, gas] of Object.entries(gasData)) {
+                if (!visibleGases[key]) continue;
+                const p = calcPressure(temp, gas, gasTuning[key]);
+                if (p !== null) {
+                    values.push({ gasKey: key, value: p });
+                }
+            }
+            lockedValues = values;
+            updateLockedPosition();
+            drawGraph();
+        }
+        initLock = true;
+    });
+
     $effect(() => {
         void showGrid;
         void logScale;
@@ -1152,7 +1226,10 @@
         void viewTempMax;
         void viewPressMin;
         void viewPressMax;
-        saveState();
+        void theme;
+        void isLocked;
+        void lockedTemp;
+        if (initSave) saveState();
     });
 
     $effect(() => {
@@ -1203,10 +1280,20 @@
         <button onclick={resetGases} class="reset-btn"
             >Reset Gas Selection</button
         >
+        <button onclick={copyShare} class="reset-btn"
+            >{shareText}</button
+        >
         <button onclick={() => (showHelp = !showHelp)} class="help-btn"
             >[?]</button
         >
     </div>
+
+    {#if showShareUrl}
+        <div class="share-row">
+            <input type="text" readonly value={shareUrl} class="share-url" />
+            <button onclick={() => (showShareUrl = false)} class="share-close">×</button>
+        </div>
+    {/if}
 
     {#if showHelp}
         <div class="help-tooltip">
