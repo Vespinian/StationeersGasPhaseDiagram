@@ -15,10 +15,10 @@ const config = {
     },
     kit: {
         paths: {
-            base: '/StationeersGasPhaseDiagram'
+            base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
         },
         adapter: adapter({
-            fallback: 'index.html'
+            fallback: '404.html'
         })
     }
 };
