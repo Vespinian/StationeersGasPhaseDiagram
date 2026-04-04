@@ -313,9 +313,13 @@
 
     const tempMin = 1;
     const tempMax = $derived.by(() => calcTempMax());
+    const tempZoomMin = 0.1;
+    const tempZoomMax = 100000;
 
-    const pressureMin = 0.1;
+    const pressureMin = 0.5;
     const pressureMax = 6500;
+    const pressureZoomMin = 0.001;
+    const pressureZoomMax = 1000000;
 
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
@@ -914,7 +918,7 @@
             1,
             ((rescaleStartPressMax - rescaleStartPressMin) / 2) * factor,
         );
-        viewPressMin = Math.max(0.01, center - halfRange);
+        viewPressMin = Math.max(pressureZoomMin, center - halfRange);
         viewPressMax = center + halfRange;
     }
 
@@ -945,15 +949,15 @@
             const logMax = Math.log10(panStartViewTempMax);
             const logRange = logMax - logMin;
             const dLog = dx * logRange;
-            viewTempMin = Math.pow(10, logMin - dLog);
-            viewTempMax = Math.pow(10, logMax - dLog);
+            viewTempMin = Math.max(tempZoomMin, Math.pow(10, logMin - dLog));
+            viewTempMax = Math.min(tempZoomMax, Math.pow(10, logMax - dLog));
         } else {
             const tempDelta =
                 panStartViewTempMin -
                 dx * (panStartViewTempMax - panStartViewTempMin);
             const range = panStartViewTempMax - panStartViewTempMin;
-            viewTempMin = tempDelta;
-            viewTempMax = tempDelta + range;
+            viewTempMin = Math.max(tempZoomMin, tempDelta);
+            viewTempMax = Math.min(tempZoomMax, tempDelta + range);
         }
 
         const dy = (svgY - panStartSvgY) / plotHeight();
@@ -964,15 +968,21 @@
             const logMax = Math.log10(panStartViewPressMax);
             const logRange = logMax - logMin;
             const dLog = dy * logRange * direction;
-            viewPressMin = Math.pow(10, logMin + dLog);
-            viewPressMax = Math.pow(10, logMax + dLog);
+            viewPressMin = Math.max(
+                pressureZoomMin,
+                Math.pow(10, logMin + dLog),
+            );
+            viewPressMax = Math.min(
+                pressureZoomMax,
+                Math.pow(10, logMax + dLog),
+            );
         } else {
             const pressDelta =
                 dy * (panStartViewPressMax - panStartViewPressMin) * direction;
             const pRange = panStartViewPressMax - panStartViewPressMin;
             let newPressMin = panStartViewPressMin + pressDelta;
-            viewPressMin = newPressMin;
-            viewPressMax = newPressMin + pRange;
+            viewPressMin = Math.max(pressureZoomMin, newPressMin);
+            viewPressMax = Math.min(pressureZoomMax, newPressMin + pRange);
         }
     }
 
@@ -1018,15 +1028,15 @@
             const offset = logAtCursor - logMin;
             const newLogMin = logAtCursor - offset * factor;
             const newLogMax = newLogMin + newLogRange;
-            viewTempMin = Math.pow(10, newLogMin);
-            viewTempMax = Math.pow(10, newLogMax);
+            viewTempMin = Math.max(tempZoomMin, Math.pow(10, newLogMin));
+            viewTempMax = Math.min(tempZoomMax, Math.pow(10, newLogMax));
         } else {
             const tempRange = viewTempMax - viewTempMin;
             const newTempRange = tempRange * factor;
             const offset = tempAtCursor - viewTempMin;
             const newOffset = offset * factor;
-            viewTempMin = tempAtCursor - newOffset;
-            viewTempMax = viewTempMin + newTempRange;
+            viewTempMin = Math.max(tempZoomMin, tempAtCursor - newOffset);
+            viewTempMax = Math.min(tempZoomMax, viewTempMin + newTempRange);
         }
 
         if (logScale) {
@@ -1038,14 +1048,17 @@
             const offset = logAtCursor - logMin;
             const newLogMin = logAtCursor - offset * factor;
             const newLogMax = newLogMin + newLogRange;
-            viewPressMin = Math.pow(10, newLogMin);
-            viewPressMax = Math.pow(10, newLogMax);
+            viewPressMin = Math.max(pressureZoomMin, Math.pow(10, newLogMin));
+            viewPressMax = Math.min(pressureZoomMax, Math.pow(10, newLogMax));
         } else {
             const newPressRange = (viewPressMax - viewPressMin) * factor;
             const newPressMin =
                 pressAtCursor - (pressAtCursor - viewPressMin) * factor;
-            viewPressMin = newPressMin;
-            viewPressMax = viewPressMin + newPressRange;
+            viewPressMin = Math.max(pressureZoomMin, newPressMin);
+            viewPressMax = Math.min(
+                pressureZoomMax,
+                viewPressMin + newPressRange,
+            );
         }
     }
 
@@ -1061,14 +1074,17 @@
             const offset = logAtCursor - logMin;
             const newLogMin = logAtCursor - offset * factor;
             const newLogMax = newLogMin + newLogRange;
-            viewPressMin = Math.pow(10, newLogMin);
-            viewPressMax = Math.pow(10, newLogMax);
+            viewPressMin = Math.max(pressureZoomMin, Math.pow(10, newLogMin));
+            viewPressMax = Math.min(pressureZoomMax, Math.pow(10, newLogMax));
         } else {
             const newPressRange = (viewPressMax - viewPressMin) * factor;
             const newPressMin =
                 pressAtCursor - (pressAtCursor - viewPressMin) * factor;
-            viewPressMin = newPressMin;
-            viewPressMax = viewPressMin + newPressRange;
+            viewPressMin = Math.max(pressureZoomMin, newPressMin);
+            viewPressMax = Math.min(
+                pressureZoomMax,
+                viewPressMin + newPressRange,
+            );
         }
     }
 
@@ -1263,7 +1279,7 @@
             viewTempMin = tempMin;
             viewTempMax = tempMax;
         }
-        viewPressMin = logScale ? 5 : pressureMin;
+        viewPressMin = 5;
         viewPressMax = logScale ? 10000 : 6500;
         updateLockedPosition();
         drawGraph();
@@ -1340,8 +1356,8 @@
 
     $effect(() => {
         if (prevLogScale && !logScale) {
-            viewPressMax = pressureMax;
-            viewPressMin = pressureMin;
+            viewPressMax = 6500;
+            viewPressMin = 5;
         } else if (!prevLogScale && logScale) {
             viewPressMax = 10000;
             viewPressMin = 5;
