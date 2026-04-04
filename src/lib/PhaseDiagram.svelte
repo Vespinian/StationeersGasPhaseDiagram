@@ -1203,6 +1203,13 @@
         updateLockedPosition();
     }
 
+    function clearAllGases() {
+        visibleGases = Object.fromEntries(
+            Object.keys(gasData).map((k) => [k, false]),
+        );
+        updateLockedPosition();
+    }
+
     $effect(() => {
         void visibleGases;
         void showGrid;
@@ -1393,8 +1400,8 @@
         </div>
         <div class="control-row">
             <button onclick={resetView} class="btn">Reset View</button>
-            <button onclick={resetGases} class="btn">Reset Gas Selection</button
-            >
+            <button onclick={resetGases} class="btn">Reset Selection</button>
+            <button onclick={clearAllGases} class="btn">Clear All</button>
             <button onclick={copyShare} class="btn">{shareText}</button>
             <button
                 onclick={() => (showMiniLegend = !showMiniLegend)}
