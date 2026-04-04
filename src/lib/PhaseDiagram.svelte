@@ -1464,6 +1464,12 @@
                 <li>
                     <strong>Click column headers</strong> — Sort the legend table
                 </li>
+                <li>
+                    <strong>Legend button</strong> — Show/hide mini legend on chart
+                </li>
+                <li>
+                    <strong>Share button</strong> — Copy shareable URL to clipboard
+                </li>
             </ul>
         </div>
     {/if}
