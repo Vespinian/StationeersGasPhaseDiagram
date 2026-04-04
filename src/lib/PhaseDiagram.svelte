@@ -439,9 +439,11 @@
 
     function formatTickValue(v: number, isY: boolean): string {
         if (isY) {
-            return `${Math.round(v)}`;
+            if (v >= 1) return `${Math.round(v)}`;
+            return v.toFixed(10).replace(/\.?0+$/, "") || "0";
         }
-        return `${Math.round(v)}K`;
+        if (v >= 1) return `${Math.round(v)}K`;
+        return (v.toFixed(10).replace(/\.?0+$/, "") || "0") + "K";
     }
 
     function getThemeColors() {
