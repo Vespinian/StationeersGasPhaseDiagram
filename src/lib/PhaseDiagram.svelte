@@ -1220,20 +1220,19 @@
     let urlGenerated = $state(false);
 
     async function copyShare() {
-        saveState();
         shareUrl = "";
-        setTimeout(() => {
-            saveState();
+        saveState();
+        setTimeout(async () => {
             urlGenerated = true;
             setTimeout(() => (urlGenerated = false), 1500);
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                shareText = "Copied!";
+            } catch {
+                shareText = "Failed";
+            }
         }, 0);
-        try {
-            await navigator.clipboard.writeText(shareUrl);
-            shareText = "Copied!";
-        } catch {
-            showShareUrl = true;
-            return;
-        }
+        showShareUrl = true;
         setTimeout(function () {
             shareText = "Share";
         }, 1500);
