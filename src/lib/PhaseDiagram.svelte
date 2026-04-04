@@ -52,6 +52,21 @@
         return null;
     }
 
+    const LOCAL_STATE_KEY = "stationeers-gas-diagram-local-state";
+    function loadLocalState(): string | null {
+        try {
+            const raw = localStorage.getItem(LOCAL_STATE_KEY);
+            return raw;
+        } catch {}
+        return null;
+    }
+
+    function saveLocalState(encoded: string) {
+        try {
+            localStorage.setItem(LOCAL_STATE_KEY, encoded);
+        } catch {}
+    }
+
     function loadState(): Record<string, unknown> | null {
         const urlState = loadFromUrl();
         if (urlState) {
@@ -83,12 +98,51 @@
             if (urlState.lk !== undefined) state.isLocked = urlState.lk;
             if (urlState.lt !== undefined) state.lockedTemp = urlState.lt;
             return state;
+        } else {
+            // get hash from localStorage
+            const encodedLocalState = loadLocalState();
+            if (encodedLocalState === null) {
+                return null;
+            }
+            const localState = JSON.parse(
+                decodeURIComponent(atob(encodedLocalState)),
+            );
+            if (localState) {
+                const state: Record<string, unknown> = {};
+                if (localState.sg !== undefined) state.showGrid = localState.sg;
+                if (localState.ls !== undefined) state.logScale = localState.ls;
+                if (localState.lx !== undefined)
+                    state.logXScale = localState.lx;
+                if (localState.ip !== undefined)
+                    state.invertPanY = localState.ip;
+                if (localState.vg !== undefined) {
+                    const hidden = localState.vg as string[];
+                    state.visibleGases = Object.fromEntries(
+                        Object.keys(gasData).map((k) => [
+                            k,
+                            !hidden.includes(k),
+                        ]),
+                    );
+                }
+                if (localState.tmn !== undefined)
+                    state.viewTempMin = localState.tmn;
+                if (localState.tmx !== undefined)
+                    state.viewTempMax = localState.tmx;
+                if (localState.pmn !== undefined)
+                    state.viewPressMin = localState.pmn;
+                if (localState.pmx !== undefined)
+                    state.viewPressMax = localState.pmx;
+                if (localState.lk !== undefined) state.isLocked = localState.lk;
+                if (localState.lt !== undefined)
+                    state.lockedTemp = localState.lt;
+                return state;
+            }
         }
         return null;
     }
 
-    const THEME_KEY = "stationeers-gas-diagram-theme";
     const SHOW_MINI_LEGEND_KEY = "stationeers-gas-diagram-show-mini-legend";
+    const THEME_KEY = "stationeers-gas-diagram-theme";
 
     function saveState() {
         const allKeys = Object.keys(gasData);
@@ -118,7 +172,9 @@
                 window.location.pathname +
                 "#" +
                 encoded;
-            history.replaceState(null, "", window.location.pathname);
+            if (window.location.hash.slice(1) === "") {
+                saveLocalState(encoded);
+            }
         } catch {}
     }
 
@@ -176,13 +232,6 @@
         if (typeof val === typeof fallback) return val as T;
         return fallback;
     }
-
-    // Force initial save after everything is mounted
-    $effect(() => {
-        if (canvas) {
-            requestAnimationFrame(() => saveState());
-        }
-    });
 
     let showGrid = $state(getSaved("showGrid", true));
     let logScale = $state(getSaved("logScale", false));
@@ -1340,16 +1389,18 @@
         void logXScale;
         void invertPanY;
         void visibleGases;
-        void sortKey;
-        void sortAsc;
         void viewTempMin;
         void viewTempMax;
         void viewPressMin;
         void viewPressMax;
-        void theme;
         void isLocked;
         void lockedTemp;
-        if (initSave) saveState();
+        if (initSave) {
+            initSave = false;
+            saveState();
+        } else {
+            saveState();
+        }
     });
 
     $effect(() => {
