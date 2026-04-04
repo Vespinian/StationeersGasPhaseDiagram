@@ -311,7 +311,19 @@
                 .map(([, gas]) => gas.maxLiqK),
             700,
         );
-        return Math.ceil(visibleMax / 100) * 100 + 100;
+        const remainder = visibleMax % 100;
+        return visibleMax - remainder + 100;
+    }
+
+    function calcTempMin(): number {
+        const visibleMin = Math.min(
+            ...Object.entries(gasData)
+                .filter(([key]) => visibleGases[key])
+                .map(([, gas]) => gas.meltK),
+            500,
+        );
+        const remainder = visibleMin % 100;
+        return visibleMin - remainder;
     }
 
     const HARD_TEMP_MIN = -4000;
@@ -325,13 +337,14 @@
     const HARD_LOG_PRESSURE_MAX = 50000;
 
     const tempMax = $derived.by(() => calcTempMax());
+    const tempMin = $derived.by(() => calcTempMin());
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
     // View state in data coordinates
-    let viewTempMin = getSaved("viewTempMin", 0);
+    let viewTempMin = getSaved("viewTempMin", calcTempMin());
     let viewTempMax = getSaved("viewTempMax", calcTempMax());
     let viewPressMin = getSaved("viewPressMin", 0);
-    let viewPressMax = getSaved("viewPressMax", 6500);
+    let viewPressMax = getSaved("viewPressMax", 6000);
 
     let canvas: HTMLCanvasElement;
     let canvasWidth = $state(1200);
@@ -409,6 +422,9 @@
     }
 
     function niceStep(range: number, targetTicks: number): number {
+        if (range <= 0 || !isFinite(range) || targetTicks <= 0) {
+            return 1;
+        }
         const rough = range / targetTicks;
         const pow10 = Math.pow(10, Math.floor(Math.log10(rough)));
         const frac = rough / pow10;
@@ -421,7 +437,13 @@
     }
 
     function generateTicks(min: number, max: number): number[] {
+        if (!isFinite(min) || !isFinite(max) || max <= min) {
+            return [];
+        }
         const step = niceStep(max - min, 10);
+        if (!isFinite(step) || step <= 0) {
+            return [];
+        }
         const ticks: number[] = [];
         const start = Math.ceil(min / step) * step;
         for (let t = start; t <= max; t += step) {
@@ -431,6 +453,15 @@
     }
 
     function generateLogTicks(min: number, max: number): number[] {
+        if (
+            !isFinite(min) ||
+            !isFinite(max) ||
+            min <= 0 ||
+            max <= 0 ||
+            max <= min
+        ) {
+            return [];
+        }
         const ticks: number[] = [];
         const logMin = Math.floor(Math.log10(min));
         const logMax = Math.ceil(Math.log10(max));
@@ -651,7 +682,7 @@
             let started = false;
 
             for (
-                let t = Math.max(0, Math.floor(viewTempMin));
+                let t = Math.max(tempMin, Math.floor(viewTempMin));
                 t <= Math.min(tempMax, Math.ceil(viewTempMax));
                 t += 1
             ) {
@@ -1232,15 +1263,15 @@
             viewTempMin = 10;
             viewTempMax = visibleGases["NaCl"] ? 5000 : 1000;
         } else {
-            viewTempMin = -50;
+            viewTempMin = tempMin;
             viewTempMax = tempMax;
         }
         if (logScale) {
             viewPressMin = 5;
         } else {
-            viewPressMin = -100;
+            viewPressMin = 0;
         }
-        viewPressMax = logScale ? 10000 : 6500;
+        viewPressMax = logScale ? 10000 : 6000;
         updateLockedPosition();
         drawGraph();
     }
@@ -1316,7 +1347,7 @@
 
     $effect(() => {
         if (prevLogScale && !logScale) {
-            viewPressMax = 6500;
+            viewPressMax = 6000;
             viewPressMin = 5;
         } else if (!prevLogScale && logScale) {
             viewPressMax = 10000;
@@ -1328,7 +1359,7 @@
 
     $effect(() => {
         if (prevLogXScale && !logXScale) {
-            viewTempMin = 0;
+            viewTempMin = tempMin;
             viewTempMax = tempMax;
         } else if (!prevLogXScale && logXScale) {
             viewTempMin = 10;
