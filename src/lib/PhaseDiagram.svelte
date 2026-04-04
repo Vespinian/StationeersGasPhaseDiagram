@@ -1212,6 +1212,11 @@
     }
 
     function handleMouseDown(event: MouseEvent) {
+        if (event.button === 1) {
+            event.preventDefault();
+            toggleLock();
+            return;
+        }
         if (event.button !== 0) return;
         const { x: svgX, y: svgY } = getSvgCoords(event.clientX, event.clientY);
         startInteraction(svgX, svgY);
@@ -1558,7 +1563,7 @@
                     <strong>Drag X-axis labels</strong> — Rescale temperature axis
                 </li>
                 <li>
-                    <strong>L</strong> — Lock/unlock cursor at current position
+                    <strong>L</strong> or <strong>Middle mouse</strong> — Lock/unlock cursor at current position
                 </li>
                 <li>
                     <strong>Click legend row</strong> — Toggle gas visibility
