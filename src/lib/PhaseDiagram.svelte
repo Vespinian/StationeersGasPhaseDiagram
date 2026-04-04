@@ -5,6 +5,7 @@
         calcPressure,
         kToC,
         formatP,
+        type GasData,
     } from "$lib/gasData";
     import "$lib/PhaseDiagram.css";
     import oxygenIcon from "$lib/icons/oxygen.png";
@@ -446,6 +447,32 @@
         return (v.toFixed(10).replace(/\.?0+$/, "") || "0") + "K";
     }
 
+    function getGasColor(gas: GasData): string {
+        if (gas.symbol === "N₂") {
+            if (theme === "dark") return "#666666";
+            if (theme === "light") return "#000000";
+            return "#000000";
+        }
+        if (gas.symbol === "O₂") {
+            if (theme === "light") return "#88aaff";
+            return gas.color;
+        }
+        return gas.color;
+    }
+
+    function getGasLabelColor(gas: GasData): string {
+        if (gas.symbol === "N₂") {
+            if (theme === "dark") return "#888888";
+            if (theme === "light") return "#000000";
+            return "#999999";
+        }
+        if (gas.symbol === "O₂") {
+            if (theme === "light") return "#88aaff";
+            return gas.labelColor;
+        }
+        return gas.labelColor;
+    }
+
     function getThemeColors() {
         if (theme === "dark") {
             return {
@@ -610,7 +637,7 @@
             if (!visibleGases[key]) continue;
             const tuning = gasTuning[key];
 
-            ctx.strokeStyle = gas.color;
+            ctx.strokeStyle = getGasColor(gas);
             ctx.lineWidth = 3;
             ctx.beginPath();
             let started = false;
@@ -652,7 +679,7 @@
                 ) {
                     const x = scaleX(t);
                     const y = scaleY(curr);
-                    ctx.fillStyle = gas.color;
+                    ctx.fillStyle = getGasColor(gas);
                     ctx.beginPath();
                     ctx.arc(x, y, 5, 0, Math.PI * 2);
                     ctx.fill();
@@ -688,7 +715,7 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                ctx.fillStyle = g.labelColor;
+                ctx.fillStyle = getGasLabelColor(g);
                 ctx.strokeStyle = t.hoverDotStroke;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -1586,10 +1613,13 @@
                 </div>
                 {#each isLocked ? lockedValues : hoveredValues as { gasKey, value } (gasKey)}
                     {@const g = gasData[gasKey]}
-                    <div class="tooltip-row" style="color: {g.labelColor}">
+                    <div
+                        class="tooltip-row"
+                        style="color: {getGasLabelColor(g)}"
+                    >
                         <span
                             class="tooltip-dot"
-                            style="background: {g.labelColor}"
+                            style="background: {getGasLabelColor(g)}"
                         ></span>
                         {g.symbol}: {Math.round(value)} kPa
                     </div>
@@ -1648,7 +1678,7 @@
                         <td class="gas-cell">
                             <span
                                 class="color-swatch"
-                                style="background: {gas.color}"
+                                style="background: {getGasColor(gas)}"
                             ></span>
                             <img
                                 class="gas-icon"

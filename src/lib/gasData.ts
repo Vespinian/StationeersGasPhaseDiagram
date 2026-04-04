@@ -27,13 +27,13 @@ export interface LabelOverrides {
 }
 
 export const gasData: Record<string, GasData> = {
-    N2: { name: 'Nitrogen', symbol: 'N₂', color: '#444444', labelColor: '#999999', meltK: 40.01, maxLiqK: 190.03, minCondKPa: 6.3, maxKPa: 6000, specificHeat: 20.6, latentHeat: 500 },
+    N2: { name: 'Nitrogen', symbol: 'N₂', color: '#000000', labelColor: '#000000', meltK: 40.01, maxLiqK: 190.03, minCondKPa: 6.3, maxKPa: 6000, specificHeat: 20.6, latentHeat: 500 },
     O2: { name: 'Oxygen', symbol: 'O₂', color: '#ffffff', labelColor: '#ffffff', meltK: 56.42, maxLiqK: 162.27, minCondKPa: 6.3, maxKPa: 6000, specificHeat: 21.1, latentHeat: 800 },
     H2: { name: 'Hydrogen', symbol: 'H₂', color: '#fca5a5', labelColor: '#fecaca', meltK: 15.18, maxLiqK: 70.06, minCondKPa: 6.3, maxKPa: 6000, specificHeat: 20.4, latentHeat: 200 },
     X: { name: 'Pollutant', symbol: 'X', color: '#ffcc00', labelColor: '#ffcc00', meltK: 173.32, maxLiqK: 433.88, minCondKPa: 1800, maxKPa: 6000, specificHeat: 24.8, latentHeat: 2000 },
     CO2: { name: 'Carbon Dioxide', symbol: 'CO₂', color: '#bbbbbb', labelColor: '#bbbbbb', meltK: 217.82, maxLiqK: 266.31, minCondKPa: 517, maxKPa: 6000, specificHeat: 28.2, latentHeat: 600 },
     N2O: { name: 'Nitrous Oxide', symbol: 'N₂O', color: '#44cc44', labelColor: '#44cc44', meltK: 251.42, maxLiqK: 430.60, minCondKPa: 800, maxKPa: 2000, specificHeat: 37.2, latentHeat: 4000 },
-    H2O: { name: 'Water', symbol: 'H₂O', color: '#4488ff', labelColor: '#4488ff', meltK: 270.17, maxLiqK: 643.71, minCondKPa: 6.3, maxKPa: 6000, specificHeat: 72.0, latentHeat: 8000 },
+    H2O: { name: 'Water', symbol: 'H₂O', color: '#4B77BE', labelColor: '#4B77BE', meltK: 270.17, maxLiqK: 643.71, minCondKPa: 6.3, maxKPa: 6000, specificHeat: 72.0, latentHeat: 8000 },
     CH4: { name: 'Methane', symbol: 'CH₄', color: '#dc2626', labelColor: '#ef4444', meltK: 81.53, maxLiqK: 195.02, minCondKPa: 6.3, maxKPa: 6000, specificHeat: 20.4, latentHeat: 1000 },
     HZ: { name: 'Hydrazine', symbol: 'HZ', color: '#ea580c', labelColor: '#f97316', meltK: 246.24, maxLiqK: 520.81, minCondKPa: 6.3, maxKPa: 6000, specificHeat: 48.4, latentHeat: 4000 },
     ALC: { name: 'Alcohol', symbol: 'ALC', color: '#CD853F', labelColor: '#CD853F', meltK: 231.63, maxLiqK: 423.68, minCondKPa: 6.3, maxKPa: 1000, specificHeat: 33.0, latentHeat: 2000 },
