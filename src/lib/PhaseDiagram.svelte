@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { untrack } from "svelte";
     import {
         gasData,
         gasTuning,
@@ -322,8 +323,26 @@
                 .map(([, gas]) => gas.meltK),
             500,
         );
-        const remainder = visibleMin % 100;
-        return visibleMin - remainder;
+        return visibleMin;
+    }
+
+    function calcLogTempMin(): number {
+        const visibleMin = Math.min(
+            ...Object.entries(gasData)
+                .filter(([key]) => visibleGases[key])
+                .map(([, gas]) => gas.meltK),
+            500,
+        );
+        if (visibleMin < 0.5) return 0.5;
+        if (visibleMin < 5) return 1;
+        if (visibleMin < 10) return 5;
+        if (visibleMin < 20) return 10;
+        if (visibleMin < 50) return 20;
+        if (visibleMin < 100) return 50;
+        if (visibleMin < 200) return 100;
+        if (visibleMin < 500) return 200;
+        if (visibleMin < 1000) return 500;
+        return 1000;
     }
 
     const HARD_TEMP_MIN = -4000;
@@ -338,6 +357,8 @@
 
     const tempMax = $derived.by(() => calcTempMax());
     const tempMin = $derived.by(() => calcTempMin());
+    const tempLogMin = $derived.by(() => calcLogTempMin());
+    const tempLogMax = $derived.by(() => (visibleGases["NaCl"] ? 5000 : 1000));
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
     function isDefaultView(
@@ -346,12 +367,8 @@
         vPressMin: number,
         vPressMax: number,
     ): boolean {
-        const expectedTempMin = logXScale ? 10 : tempMin;
-        const expectedTempMax = logXScale
-            ? visibleGases["NaCl"]
-                ? 5000
-                : 1000
-            : tempMax;
+        const expectedTempMin = logXScale ? tempLogMin : tempMin;
+        const expectedTempMax = logXScale ? tempLogMax : tempMax;
         const expectedPressMin = logScale ? 5 : 0;
         const expectedPressMax = logScale ? 10000 : 6000;
         return (
@@ -704,8 +721,15 @@
             let started = false;
 
             for (
-                let t = Math.max(tempMin, Math.floor(viewTempMin));
-                t <= Math.min(tempMax, Math.ceil(viewTempMax));
+                let t = Math.max(
+                    logXScale ? tempLogMin : tempMin,
+                    Math.ceil(viewTempMin),
+                );
+                t <=
+                Math.min(
+                    logXScale ? tempLogMax : tempMax,
+                    Math.ceil(viewTempMax),
+                );
                 t += 1
             ) {
                 const p = calcPressure(t, gas, tuning);
@@ -1300,8 +1324,8 @@
 
     function resetView() {
         if (logXScale) {
-            viewTempMin = 10;
-            viewTempMax = visibleGases["NaCl"] ? 5000 : 1000;
+            viewTempMin = tempLogMin;
+            viewTempMax = tempLogMax;
         } else {
             viewTempMin = tempMin;
             viewTempMax = tempMax;
@@ -1330,6 +1354,9 @@
             Object.keys(gasData).map((k) => [k, k !== "He"]),
         );
         updateLockedPosition();
+        if (graphMoved === false) {
+            resetView();
+        }
     }
 
     function clearAllGases() {
@@ -1347,7 +1374,7 @@
     });
 
     let prevLogScale = $state(false);
-    let prevLogXScale = $state(logXScale);
+    let prevLogXScale = $state(untrack(() => logXScale)); // Just get the inital value in here
     let showHelp = $state(false);
     let showMiniLegend = $state(loadShowMiniLegend());
     let shareText = $state("Share");
