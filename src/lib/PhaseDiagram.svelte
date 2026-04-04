@@ -173,7 +173,7 @@
                 "#" +
                 encoded;
             history.replaceState(null, "", window.location.pathname);
-            if (loadFromUrl == null) {
+            if (window.location.hash.slice(1) == null) {
                 saveLocalState(encoded);
             }
         } catch {}
