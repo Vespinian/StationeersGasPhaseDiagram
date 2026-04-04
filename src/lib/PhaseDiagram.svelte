@@ -306,33 +306,42 @@
     );
 
     function calcTempMax(): number {
-        const visibleMax = Math.max(
-            ...Object.entries(gasData)
-                .filter(([key]) => visibleGases[key])
-                .map(([, gas]) => gas.maxLiqK),
-            700,
-        );
+        const visibleMaxValues = Object.entries(gasData)
+            .filter(([key]) => visibleGases[key])
+            .map(([, gas]) => gas.maxLiqK);
+
+        if (visibleMaxValues.length === 0) {
+            return 700;
+        }
+
+        const visibleMax = Math.max(...visibleMaxValues);
         const remainder = visibleMax % 100;
         return visibleMax - remainder + 100;
     }
 
     function calcTempMin(): number {
-        const visibleMin = Math.min(
-            ...Object.entries(gasData)
-                .filter(([key]) => visibleGases[key])
-                .map(([, gas]) => gas.meltK),
-            500,
-        );
+        const visibleMinValues = Object.entries(gasData)
+            .filter(([key]) => visibleGases[key])
+            .map(([, gas]) => gas.meltK);
+
+        if (visibleMinValues.length === 0) {
+            return 0;
+        }
+
+        const visibleMin = Math.min(...visibleMinValues);
         return visibleMin < 20 ? 0 : visibleMin - 5;
     }
 
     function calcLogTempMin(): number {
-        const visibleMin = Math.min(
-            ...Object.entries(gasData)
-                .filter(([key]) => visibleGases[key])
-                .map(([, gas]) => gas.meltK),
-            500,
-        );
+        const visibleMinValues = Object.entries(gasData)
+            .filter(([key]) => visibleGases[key])
+            .map(([, gas]) => gas.meltK);
+
+        if (visibleMinValues.length === 0) {
+            return 0.5;
+        }
+
+        const visibleMin = Math.min(...visibleMinValues);
         if (visibleMin < 0.5) return 0.5;
         if (visibleMin < 5) return 1;
         if (visibleMin < 10) return 5;
