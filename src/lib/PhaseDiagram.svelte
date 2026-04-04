@@ -928,11 +928,9 @@
             const wantedDelta = (logMax - logMin) * dx;
 
             if (Math.pow(10, logMax + wantedDelta) > HARD_LOG_TEMP_MAX) {
-                viewTempMin = viewTempMin;
                 viewTempMax = HARD_LOG_TEMP_MAX;
             } else if (Math.pow(10, logMin + wantedDelta) < HARD_LOG_TEMP_MIN) {
                 viewTempMin = HARD_LOG_TEMP_MIN;
-                viewTempMax = viewTempMax;
                 HARD_LOG_TEMP_MIN + Math.pow(10, logMax - logMin);
             } else {
                 viewTempMin = Math.pow(10, logMin + wantedDelta);
@@ -962,13 +960,11 @@
             const wantedDelta = (logMax - logMin) * dy * direction;
 
             if (Math.pow(10, logMax + wantedDelta) > HARD_LOG_PRESSURE_MAX) {
-                viewPressMin = viewPressMin;
                 viewPressMax = HARD_LOG_PRESSURE_MAX;
             } else if (
                 Math.pow(10, logMin + wantedDelta) < HARD_LOG_PRESSURE_MIN
             ) {
                 viewPressMin = HARD_LOG_PRESSURE_MIN;
-                viewPressMax = viewPressMax;
                 HARD_LOG_PRESSURE_MIN + Math.pow(10, logMax - logMin);
             } else {
                 viewPressMin = Math.pow(10, logMin + wantedDelta);
