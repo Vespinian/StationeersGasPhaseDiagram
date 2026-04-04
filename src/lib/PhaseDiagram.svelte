@@ -323,7 +323,7 @@
                 .map(([, gas]) => gas.meltK),
             500,
         );
-        return visibleMin;
+        return visibleMin < 20 ? 0 : visibleMin - 5;
     }
 
     function calcLogTempMin(): number {
@@ -364,7 +364,8 @@
     const themeColors = $derived(getThemeColors());
 
     const cachedGasColors = $derived.by(() => {
-        const colors: Record<string, { color: string; labelColor: string }> = {};
+        const colors: Record<string, { color: string; labelColor: string }> =
+            {};
         for (const [key, gas] of Object.entries(gasData)) {
             colors[key] = {
                 color: getGasColor(gas),
