@@ -152,20 +152,23 @@
         if (hiddenKeys.length > 0 && hiddenKeys.length < allKeys.length) {
             state.vg = hiddenKeys;
         }
-        if (viewTempMin !== tempMin || viewTempMax !== tempMax) {
-            state.tmn = viewTempMin;
-            state.tmx = viewTempMax;
-        }
-        if (viewPressMin !== pressureMin || viewPressMax !== pressureMax) {
-            state.pmn = viewPressMin;
-            state.pmx = viewPressMax;
-        }
         if (showGrid !== true) state.sg = showGrid;
         if (logScale !== false) state.ls = logScale;
         if (logXScale !== false) state.lx = logXScale;
         if (invertPanY !== true) state.ip = invertPanY;
         if (isLocked !== false) state.lk = isLocked;
         if (lockedTemp !== null) state.lt = lockedTemp;
+        if (viewTempMin >= HARD_TEMP_MIN || viewTempMax <= HARD_LOG_TEMP_MAX) {
+            state.tmn = viewTempMin;
+            state.tmx = viewTempMax;
+        }
+        if (
+            viewPressMin >= HARD_PRESSURE_MIN ||
+            viewPressMax <= HARD_LOG_PRESSURE_MAX
+        ) {
+            state.pmn = viewPressMin;
+            state.pmx = viewPressMax;
+        }
         try {
             const encoded = btoa(encodeURIComponent(JSON.stringify(state)));
             shareUrl =
@@ -311,23 +314,24 @@
         return Math.ceil(visibleMax / 100) * 100 + 100;
     }
 
-    const tempMin = 1;
+    const HARD_TEMP_MIN = -4000;
+    const HARD_TEMP_MAX = 4000;
+    const HARD_LOG_TEMP_MIN = 1;
+    const HARD_LOG_TEMP_MAX = 20000;
+
+    const HARD_PRESSURE_MIN = -6500;
+    const HARD_PRESSURE_MAX = 12500;
+    const HARD_LOG_PRESSURE_MIN = 1;
+    const HARD_LOG_PRESSURE_MAX = 50000;
+
     const tempMax = $derived.by(() => calcTempMax());
-    const tempZoomMin = 0.1;
-    const tempZoomMax = 100000;
-
-    const pressureMin = 0.5;
-    const pressureMax = 6500;
-    const pressureZoomMin = 0.001;
-    const pressureZoomMax = 1000000;
-
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
     // View state in data coordinates
-    let viewTempMin = getSaved("viewTempMin", tempMin);
+    let viewTempMin = getSaved("viewTempMin", 0);
     let viewTempMax = getSaved("viewTempMax", calcTempMax());
-    let viewPressMin = getSaved("viewPressMin", pressureMin);
-    let viewPressMax = getSaved("viewPressMax", pressureMax);
+    let viewPressMin = getSaved("viewPressMin", 0);
+    let viewPressMax = getSaved("viewPressMax", 6500);
 
     let canvas: HTMLCanvasElement;
     let canvasWidth = $state(1200);
@@ -647,7 +651,7 @@
             let started = false;
 
             for (
-                let t = Math.max(tempMin, Math.floor(viewTempMin));
+                let t = Math.max(0, Math.floor(viewTempMin));
                 t <= Math.min(tempMax, Math.ceil(viewTempMax));
                 t += 1
             ) {
@@ -669,7 +673,7 @@
 
             // Endpoint dots
             for (
-                let t = Math.max(tempMin, Math.floor(viewTempMin));
+                let t = Math.max(0, Math.floor(viewTempMin));
                 t <= Math.min(tempMax, Math.ceil(viewTempMax));
                 t += 1
             ) {
@@ -879,7 +883,7 @@
         const tempK = invScaleX(svgX);
         const rounded = Math.round(tempK);
 
-        if (rounded >= tempMin && rounded <= tempMax) {
+        if (rounded >= 0 && rounded <= tempMax) {
             hoveredX = svgX;
             hoveredTemp = rounded;
 
@@ -910,87 +914,88 @@
         return { x: clientX - rect.left, y: clientY - rect.top };
     }
 
-    function doRescaleY(svgY: number) {
-        const dy = svgY - rescaleStartSvgY;
-        const factor = 1 + dy / plotHeight();
-        const center = (rescaleStartPressMin + rescaleStartPressMax) / 2;
-        const halfRange = Math.max(
-            1,
-            ((rescaleStartPressMax - rescaleStartPressMin) / 2) * factor,
-        );
-        viewPressMin = Math.max(pressureZoomMin, center - halfRange);
-        viewPressMax = center + halfRange;
-    }
-
-    function doRescaleX(svgX: number) {
-        const dx = svgX - rescaleStartSvgX;
-        if (logXScale) {
-            const logMin = Math.log10(rescaleStartTempMin);
-            const logMax = Math.log10(rescaleStartTempMax);
-            const logRange = logMax - logMin;
-            const dLog = (dx / plotWidth()) * logRange;
-            const newLogMin = logMin + dLog;
-            const newLogMax = logMax + dLog;
-            viewTempMin = Math.pow(10, newLogMin);
-            viewTempMax = Math.pow(10, newLogMax);
-        } else {
-            const factor = 1 + dx / plotWidth();
-            const newRange =
-                (rescaleStartTempMax - rescaleStartTempMin) * factor;
-            viewTempMin = rescaleStartTempMin;
-            viewTempMax = rescaleStartTempMin + newRange;
-        }
-    }
-
     function doPan(svgX: number, svgY: number) {
-        const dx = (svgX - panStartSvgX) / plotWidth();
+        const dx = ((svgX - panPrevSvgX) / plotWidth()) * -1;
         if (logXScale) {
-            const logMin = Math.log10(panStartViewTempMin);
-            const logMax = Math.log10(panStartViewTempMax);
-            const logRange = logMax - logMin;
-            const dLog = dx * logRange;
-            viewTempMin = Math.max(tempZoomMin, Math.pow(10, logMin - dLog));
-            viewTempMax = Math.min(tempZoomMax, Math.pow(10, logMax - dLog));
+            // const logMin = Math.log10(qanStartViewTempMin);
+            // const logMax = Math.log10(panStartViewTempMax);
+            // const logRange = logMax - logMin;
+            // const dLog = dx * logRange;
+            // viewTempMin = Math.max(HARD_TEMP_MIN, Math.pow(10, logMin - dLog));
+            // viewTempMax = Math.min(HARD_TEMP_MAX, Math.pow(10, logMax - dLog));
+            const logMin = Math.log10(viewTempMin);
+            const logMax = Math.log10(viewTempMax);
+            const wantedDelta = (logMax - logMin) * dx;
+
+            if (Math.pow(10, logMax + wantedDelta) > HARD_LOG_TEMP_MAX) {
+                viewTempMax = HARD_LOG_TEMP_MAX;
+            } else if (Math.pow(10, logMin + wantedDelta) < HARD_LOG_TEMP_MIN) {
+                viewTempMin = HARD_LOG_TEMP_MIN;
+                HARD_LOG_TEMP_MIN + Math.pow(10, logMax - logMin);
+            } else {
+                viewTempMin = Math.pow(10, logMin + wantedDelta);
+                viewTempMax = Math.pow(10, logMax + wantedDelta);
+            }
         } else {
-            const tempDelta =
-                panStartViewTempMin -
-                dx * (panStartViewTempMax - panStartViewTempMin);
-            const range = panStartViewTempMax - panStartViewTempMin;
-            viewTempMin = Math.max(tempZoomMin, tempDelta);
-            viewTempMax = Math.min(tempZoomMax, tempDelta + range);
+            const wantedDelta = (viewTempMax - viewTempMin) * dx;
+
+            if (viewTempMax + wantedDelta > HARD_TEMP_MAX) {
+                viewTempMin = HARD_TEMP_MAX - (viewTempMax - viewTempMin);
+                viewTempMax = HARD_TEMP_MAX;
+            } else if (viewTempMin + wantedDelta < HARD_TEMP_MIN) {
+                viewTempMin = HARD_TEMP_MIN;
+                viewTempMax = HARD_TEMP_MIN + (viewTempMax - viewTempMin);
+            } else {
+                viewTempMin = viewTempMin + wantedDelta;
+                viewTempMax = viewTempMax + wantedDelta;
+            }
         }
 
-        const dy = (svgY - panStartSvgY) / plotHeight();
+        const dy = (svgY - panPrevSvgY) / plotHeight();
         const direction = invertPanY ? 1 : -1;
 
         if (logScale) {
-            const logMin = Math.log10(panStartViewPressMin);
-            const logMax = Math.log10(panStartViewPressMax);
-            const logRange = logMax - logMin;
-            const dLog = dy * logRange * direction;
-            viewPressMin = Math.max(
-                pressureZoomMin,
-                Math.pow(10, logMin + dLog),
-            );
-            viewPressMax = Math.min(
-                pressureZoomMax,
-                Math.pow(10, logMax + dLog),
-            );
+            const logMin = Math.log10(viewPressMin);
+            const logMax = Math.log10(viewPressMax);
+            const wantedDelta = (logMax - logMin) * dy * direction;
+
+            if (Math.pow(10, logMax + wantedDelta) > HARD_LOG_PRESSURE_MAX) {
+                viewPressMax = HARD_LOG_PRESSURE_MAX;
+            } else if (
+                Math.pow(10, logMin + wantedDelta) < HARD_LOG_PRESSURE_MIN
+            ) {
+                viewPressMin = HARD_LOG_PRESSURE_MIN;
+                HARD_LOG_PRESSURE_MIN + Math.pow(10, logMax - logMin);
+            } else {
+                viewPressMin = Math.pow(10, logMin + wantedDelta);
+                viewPressMax = Math.pow(10, logMax + wantedDelta);
+            }
         } else {
-            const pressDelta =
-                dy * (panStartViewPressMax - panStartViewPressMin) * direction;
-            const pRange = panStartViewPressMax - panStartViewPressMin;
-            let newPressMin = panStartViewPressMin + pressDelta;
-            viewPressMin = Math.max(pressureZoomMin, newPressMin);
-            viewPressMax = Math.min(pressureZoomMax, newPressMin + pRange);
+            const wantedDelta = (viewPressMax - viewPressMin) * dy * direction;
+
+            if (viewPressMax + wantedDelta > HARD_PRESSURE_MAX) {
+                viewPressMin =
+                    HARD_PRESSURE_MAX - (viewPressMax - viewPressMin);
+                viewPressMax = HARD_PRESSURE_MAX;
+            } else if (viewPressMin + wantedDelta < HARD_PRESSURE_MIN) {
+                viewPressMin = HARD_PRESSURE_MIN;
+                viewPressMax =
+                    HARD_PRESSURE_MIN + (viewPressMax - viewPressMin);
+            } else {
+                viewPressMin = viewPressMin + wantedDelta;
+                viewPressMax = viewPressMax + wantedDelta;
+            }
         }
+
+        panPrevSvgY = svgY;
+        panPrevSvgX = svgX;
     }
 
     function doHover(svgX: number) {
         const tempK = invScaleX(svgX);
         const rounded = Math.round(tempK);
 
-        if (tempK < tempMin || tempK > tempMax) {
+        if (tempK < HARD_TEMP_MIN || tempK > tempMax) {
             hoveredX = null;
             hoveredTemp = null;
             hoveredValues = [];
@@ -1028,15 +1033,15 @@
             const offset = logAtCursor - logMin;
             const newLogMin = logAtCursor - offset * factor;
             const newLogMax = newLogMin + newLogRange;
-            viewTempMin = Math.max(tempZoomMin, Math.pow(10, newLogMin));
-            viewTempMax = Math.min(tempZoomMax, Math.pow(10, newLogMax));
+            viewTempMin = Math.max(HARD_LOG_TEMP_MIN, Math.pow(10, newLogMin));
+            viewTempMax = Math.min(HARD_LOG_TEMP_MAX, Math.pow(10, newLogMax));
         } else {
             const tempRange = viewTempMax - viewTempMin;
             const newTempRange = tempRange * factor;
             const offset = tempAtCursor - viewTempMin;
             const newOffset = offset * factor;
-            viewTempMin = Math.max(tempZoomMin, tempAtCursor - newOffset);
-            viewTempMax = Math.min(tempZoomMax, viewTempMin + newTempRange);
+            viewTempMin = Math.max(HARD_TEMP_MIN, tempAtCursor - newOffset);
+            viewTempMax = Math.min(HARD_TEMP_MAX, viewTempMin + newTempRange);
         }
 
         if (logScale) {
@@ -1048,15 +1053,21 @@
             const offset = logAtCursor - logMin;
             const newLogMin = logAtCursor - offset * factor;
             const newLogMax = newLogMin + newLogRange;
-            viewPressMin = Math.max(pressureZoomMin, Math.pow(10, newLogMin));
-            viewPressMax = Math.min(pressureZoomMax, Math.pow(10, newLogMax));
+            viewPressMin = Math.max(
+                HARD_LOG_PRESSURE_MIN,
+                Math.pow(10, newLogMin),
+            );
+            viewPressMax = Math.min(
+                HARD_LOG_PRESSURE_MAX,
+                Math.pow(10, newLogMax),
+            );
         } else {
             const newPressRange = (viewPressMax - viewPressMin) * factor;
             const newPressMin =
                 pressAtCursor - (pressAtCursor - viewPressMin) * factor;
-            viewPressMin = Math.max(pressureZoomMin, newPressMin);
+            viewPressMin = Math.max(HARD_PRESSURE_MIN, newPressMin);
             viewPressMax = Math.min(
-                pressureZoomMax,
+                HARD_PRESSURE_MAX,
                 viewPressMin + newPressRange,
             );
         }
@@ -1074,15 +1085,21 @@
             const offset = logAtCursor - logMin;
             const newLogMin = logAtCursor - offset * factor;
             const newLogMax = newLogMin + newLogRange;
-            viewPressMin = Math.max(pressureZoomMin, Math.pow(10, newLogMin));
-            viewPressMax = Math.min(pressureZoomMax, Math.pow(10, newLogMax));
+            viewPressMin = Math.max(
+                HARD_LOG_PRESSURE_MIN,
+                Math.pow(10, newLogMin),
+            );
+            viewPressMax = Math.min(
+                HARD_LOG_PRESSURE_MAX,
+                Math.pow(10, newLogMax),
+            );
         } else {
             const newPressRange = (viewPressMax - viewPressMin) * factor;
             const newPressMin =
                 pressAtCursor - (pressAtCursor - viewPressMin) * factor;
-            viewPressMin = Math.max(pressureZoomMin, newPressMin);
+            viewPressMin = Math.max(HARD_PRESSURE_MIN, newPressMin);
             viewPressMax = Math.min(
-                pressureZoomMax,
+                HARD_PRESSURE_MAX,
                 viewPressMin + newPressRange,
             );
         }
@@ -1090,22 +1107,6 @@
 
     function handleMouseMove(event: MouseEvent) {
         const { x: svgX, y: svgY } = getSvgCoords(event.clientX, event.clientY);
-
-        if (isRescalingY) {
-            doRescaleY(svgY);
-            updateLockedPosition();
-            updateHoverCursor(svgX);
-            drawGraph();
-            return;
-        }
-
-        if (isRescalingX) {
-            doRescaleX(svgX);
-            updateLockedPosition();
-            updateHoverCursor(svgX);
-            drawGraph();
-            return;
-        }
 
         if (isPanning) {
             doPan(svgX, svgY);
@@ -1126,8 +1127,6 @@
         hoveredX = null;
         hoveredTemp = null;
         hoveredValues = [];
-        isRescalingX = false;
-        isRescalingY = false;
         isPanning = false;
         drawGraph();
     }
@@ -1135,80 +1134,34 @@
     function handleCanvasMouseOver(event: MouseEvent) {
         const { x: svgX, y: svgY } = getSvgCoords(event.clientX, event.clientY);
 
-        if (isPanning || isRescalingY || isRescalingX) return;
+        if (isPanning) return;
 
         if (
             svgX < margin.left &&
             svgY >= margin.top &&
             svgY <= margin.top + plotHeight()
         ) {
-            canvas.classList.add("rescale-y");
-            canvas.classList.remove("rescale-x");
+            canvas.style.cursor = "ns-resize";
         } else if (
             svgY > margin.top + plotHeight() &&
             svgX >= margin.left &&
             svgX <= margin.left + plotWidth()
         ) {
-            canvas.classList.add("rescale-x");
-            canvas.classList.remove("rescale-y");
+            canvas.style.cursor = "ew-resize";
         } else {
-            canvas.classList.remove("rescale-y");
-            canvas.classList.remove("rescale-x");
+            canvas.style.cursor = "";
         }
     }
 
     // Pan state
     let isPanning = $state(false);
-    let panStartSvgX = $state(0);
-    let panStartSvgY = $state(0);
-    let panStartViewTempMin = $state(0);
-    let panStartViewTempMax = $state(0);
-    let panStartViewPressMin = $state(0);
-    let panStartViewPressMax = $state(0);
-
-    // Axis rescale state
-    let isRescalingY = $state(false);
-    let rescaleStartSvgY = $state(0);
-    let rescaleStartPressMin = $state(0);
-    let rescaleStartPressMax = $state(0);
-
-    let isRescalingX = $state(false);
-    let rescaleStartSvgX = $state(0);
-    let rescaleStartTempMin = $state(0);
-    let rescaleStartTempMax = $state(0);
+    let panPrevSvgX = $state(0);
+    let panPrevSvgY = $state(0);
 
     function startInteraction(svgX: number, svgY: number) {
-        if (
-            svgX < margin.left &&
-            svgY >= margin.top &&
-            svgY <= margin.top + plotHeight()
-        ) {
-            isRescalingY = true;
-            rescaleStartSvgY = svgY;
-            rescaleStartPressMin = viewPressMin;
-            rescaleStartPressMax = viewPressMax;
-            return;
-        }
-
-        if (
-            svgY > margin.top + plotHeight() &&
-            svgX >= margin.left &&
-            svgX <= margin.left + plotWidth()
-        ) {
-            isRescalingX = true;
-            rescaleStartSvgX = svgX;
-            rescaleStartTempMin = viewTempMin;
-            rescaleStartTempMax = viewTempMax;
-            return;
-        }
-
         isPanning = true;
-        panStartSvgX = svgX;
-        panStartSvgY = svgY;
-        panStartViewTempMin = viewTempMin;
-        panStartViewTempMax = viewTempMax;
-        panStartViewPressMin = viewPressMin;
-        panStartViewPressMax = viewPressMax;
+        panPrevSvgX = svgX;
+        panPrevSvgY = svgY;
     }
 
     function handleMouseDown(event: MouseEvent) {
@@ -1224,8 +1177,6 @@
 
     function handleMouseUp() {
         isPanning = false;
-        isRescalingY = false;
-        isRescalingX = false;
     }
 
     function handleTouchMove(event: TouchEvent) {
@@ -1281,10 +1232,14 @@
             viewTempMin = 10;
             viewTempMax = visibleGases["NaCl"] ? 5000 : 1000;
         } else {
-            viewTempMin = tempMin;
+            viewTempMin = -50;
             viewTempMax = tempMax;
         }
-        viewPressMin = 5;
+        if (logScale) {
+            viewPressMin = 5;
+        } else {
+            viewPressMin = -100;
+        }
         viewPressMax = logScale ? 10000 : 6500;
         updateLockedPosition();
         drawGraph();
@@ -1373,7 +1328,7 @@
 
     $effect(() => {
         if (prevLogXScale && !logXScale) {
-            viewTempMin = tempMin;
+            viewTempMin = 0;
             viewTempMax = tempMax;
         } else if (!prevLogXScale && logXScale) {
             viewTempMin = 10;
@@ -1557,13 +1512,8 @@
                 </li>
                 <li><strong>Click + drag</strong> — Pan the view</li>
                 <li>
-                    <strong>Drag Y-axis labels</strong> — Rescale pressure axis
-                </li>
-                <li>
-                    <strong>Drag X-axis labels</strong> — Rescale temperature axis
-                </li>
-                <li>
-                    <strong>L</strong> or <strong>Middle mouse</strong> — Lock/unlock cursor at current position
+                    <strong>L</strong> or <strong>Middle mouse</strong> — Lock/unlock
+                    cursor at current position
                 </li>
                 <li>
                     <strong>Click legend row</strong> — Toggle gas visibility
@@ -1612,8 +1562,6 @@
             onmouseenter={handleCanvasMouseOver}
             ontouchmove={handleTouchMove}
             class:panning={isPanning}
-            class:rescale-y={isRescalingY}
-            class:rescale-x={isRescalingX}
         ></canvas>
 
         {#if (isLocked && lockedTemp !== null && lockedValues.length > 0) || (!isLocked && hoveredTemp !== null && hoveredValues.length > 0)}

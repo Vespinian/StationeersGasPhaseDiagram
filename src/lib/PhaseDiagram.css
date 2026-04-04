@@ -247,13 +247,6 @@ h2 {
     border-color: #444;
 }
 
-.controls label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-}
-
 .chart-wrapper {
     position: relative;
     width: 100%;
@@ -332,11 +325,6 @@ h2 {
 
 .chart-wrapper canvas.panning {
     cursor: grabbing;
-}
-
-.chart-wrapper canvas.rescale-y,
-.chart-wrapper canvas.rescale-x {
-    cursor: ns-resize;
 }
 
 .tooltip {
@@ -475,18 +463,6 @@ h2 {
     width: 12px;
     height: 12px;
     display: inline-block;
-    border-radius: 2px;
-    flex-shrink: 0;
-}
-
-.light-mode .color-swatch {
-    border-color: #a2a9b1;
-}
-
-.color-swatch {
-    width: 12px;
-    height: 12px;
-    display: inline-block;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 2px;
     flex-shrink: 0;
@@ -499,28 +475,6 @@ h2 {
 .lock-icon {
     margin-left: 6px;
     font-size: 11px;
-}
-
-.help-tooltip {
-    max-width: 400px;
-    margin: 0 auto 15px;
-    background: #1e2a3d;
-    border: 1px solid rgba(100, 140, 200, 0.2);
-    border-radius: 8px;
-    padding: 15px 20px;
-    font-size: 13px;
-    line-height: 1.8;
-}
-
-.light-mode .help-tooltip {
-    background: #fff;
-    border-color: #a2a9b1;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.dark-mode .help-tooltip {
-    background: #111;
-    border-color: #444;
 }
 
 .help-tooltip h3 {
