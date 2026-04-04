@@ -56,13 +56,21 @@
         const urlState = loadFromUrl();
         if (urlState) {
             try {
-                const encoded = btoa(encodeURIComponent(JSON.stringify(urlState)));
-                shareUrl = window.location.origin + window.location.pathname + "#" + encoded;
+                const encoded = btoa(
+                    encodeURIComponent(JSON.stringify(urlState)),
+                );
+                shareUrl =
+                    window.location.origin +
+                    window.location.pathname +
+                    "#" +
+                    encoded;
             } catch {}
             return urlState;
         }
         return null;
     }
+
+    const THEME_KEY = "stationeers-gas-diagram-theme";
 
     function saveState() {
         const state = {
@@ -70,7 +78,6 @@
             logScale,
             logXScale,
             invertPanY,
-            theme,
             visibleGases,
             viewTempMin,
             viewTempMax,
@@ -81,8 +88,28 @@
         };
         try {
             const encoded = btoa(encodeURIComponent(JSON.stringify(state)));
-            shareUrl = window.location.origin + window.location.pathname + "#" + encoded;
+            shareUrl =
+                window.location.origin +
+                window.location.pathname +
+                "#" +
+                encoded;
             history.replaceState(null, "", window.location.pathname);
+        } catch {}
+    }
+
+    function loadTheme(): "stationeers" | "light" | "dark" {
+        try {
+            const raw = localStorage.getItem(THEME_KEY);
+            if (raw === "light" || raw === "dark" || raw === "stationeers") {
+                return raw;
+            }
+        } catch {}
+        return "stationeers";
+    }
+
+    function saveTheme() {
+        try {
+            localStorage.setItem(THEME_KEY, theme);
         } catch {}
     }
 
@@ -99,9 +126,7 @@
     let logScale = $state(saved?.logScale ?? false);
     let logXScale = $state(saved?.logXScale ?? false);
     let invertPanY = $state(saved?.invertPanY ?? true);
-    let theme = $state<"stationeers" | "light" | "dark">(
-        saved?.theme ?? "stationeers",
-    );
+    let theme = $state<"stationeers" | "light" | "dark">(loadTheme());
     let visibleGases: Record<string, boolean> = $state(
         saved?.visibleGases ??
             Object.fromEntries(
@@ -1157,7 +1182,7 @@
         setTimeout(() => {
             saveState();
             urlGenerated = true;
-            setTimeout(() => urlGenerated = false, 1500);
+            setTimeout(() => (urlGenerated = false), 1500);
         }, 0);
         try {
             await navigator.clipboard.writeText(shareUrl);
@@ -1166,7 +1191,9 @@
             showShareUrl = true;
             return;
         }
-        setTimeout(function() { shareText = "Share"; }, 1500);
+        setTimeout(function () {
+            shareText = "Share";
+        }, 1500);
     }
 
     $effect(() => {
@@ -1175,7 +1202,11 @@
                 const hash = window.location.hash.slice(1);
                 if (hash) {
                     const state = JSON.parse(decodeURIComponent(atob(hash)));
-                    shareUrl = window.location.origin + window.location.pathname + "#" + hash;
+                    shareUrl =
+                        window.location.origin +
+                        window.location.pathname +
+                        "#" +
+                        hash;
                 }
             } catch {}
         }
@@ -1215,6 +1246,7 @@
             document.body.classList.add("dark-mode");
             document.documentElement.classList.add("dark-mode");
         }
+        saveTheme();
     });
 
     $effect(() => {
@@ -1229,7 +1261,7 @@
 
     $effect(() => {
         if (!canvas || initLock) return;
-        if (saved?.isLocked && typeof saved?.lockedTemp === 'number') {
+        if (saved?.isLocked && typeof saved?.lockedTemp === "number") {
             initSave = false;
             isLocked = true;
             const temp = saved.lockedTemp as number;
@@ -1295,48 +1327,57 @@
     </p>
 
     <div class="controls">
-        <label>
-            <input type="checkbox" bind:checked={showGrid} />
-            Grid
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={logScale} />
-            Log Y Scale
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={logXScale} />
-            Log X Scale
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={invertPanY} />
-            Invert Y Pan
-        </label>
-        <button onclick={resetView} class="reset-btn">Reset View</button>
-        <button onclick={resetGases} class="reset-btn"
-            >Reset Gas Selection</button
-        >
-        <button onclick={copyShare} class="reset-btn"
-            >{shareText}</button
-        >
-        <button onclick={() => (showMiniLegend = !showMiniLegend)} class="help-btn"
-            >Legend</button
-        >
-        <button onclick={() => (showHelp = !showHelp)} class="help-btn"
-            >[?]</button
-        >
+        <div class="control-row">
+            <label>
+                <input type="checkbox" bind:checked={showGrid} />
+                Grid
+            </label>
+            <label>
+                <input type="checkbox" bind:checked={logScale} />
+                Log Y Scale
+            </label>
+            <label>
+                <input type="checkbox" bind:checked={logXScale} />
+                Log X Scale
+            </label>
+            <label>
+                <input type="checkbox" bind:checked={invertPanY} />
+                Invert Y Pan
+            </label>
+        </div>
+        <div class="control-row">
+            <button onclick={resetView} class="btn">Reset View</button>
+            <button onclick={resetGases} class="btn"
+                >Reset Gas Selection</button
+            >
+            <button onclick={copyShare} class="btn">{shareText}</button>
+            <button
+                onclick={() => (showMiniLegend = !showMiniLegend)}
+                class="btn">Legend</button
+            >
+            <button onclick={() => (showHelp = !showHelp)} class="btn"
+                >[?]</button
+            >
+        </div>
     </div>
 
     {#if showShareUrl}
         <div class="share-row">
-            <input 
-                type="text" 
-                readonly 
-                value={shareUrl} 
-                class="share-url" 
+            <input
+                type="text"
+                readonly
+                value={shareUrl}
+                class="share-url"
                 class:share-url-glow={urlGenerated}
                 onclick={(e) => (e.target as HTMLInputElement).select()}
             />
-            <button onclick={() => { showShareUrl = false; shareText = "Share"; }} class="share-close">×</button>
+            <button
+                onclick={() => {
+                    showShareUrl = false;
+                    shareText = "Share";
+                }}
+                class="share-close">×</button
+            >
         </div>
     {/if}
 
@@ -1385,10 +1426,10 @@
         {#if showMiniLegend}
             <div class="mini-legend">
                 {#each Object.entries(gasData) as [key, gas] (key)}
-                    <div 
+                    <div
                         class="mini-legend-item"
                         class:hidden={!visibleGases[key]}
-                        onclick={() => visibleGases[key] = !visibleGases[key]}
+                        onclick={() => (visibleGases[key] = !visibleGases[key])}
                         title={gas.name}
                     >
                         <img src={gasIcons[key]} alt={gas.symbol} />

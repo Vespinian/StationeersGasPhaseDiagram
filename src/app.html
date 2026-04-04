@@ -9,14 +9,11 @@
 		<script>
 			(function() {
 				try {
-					var hash = window.location.hash.slice(1);
-					if (hash) {
-						var state = JSON.parse(decodeURIComponent(atob(hash)));
-						if (state.theme === "light") {
-							document.documentElement.classList.add("light-mode");
-						} else if (state.theme === "dark") {
-							document.documentElement.classList.add("dark-mode");
-						}
+					var theme = localStorage.getItem("stationeers-gas-diagram-theme");
+					if (theme === "light") {
+						document.documentElement.classList.add("light-mode");
+					} else if (theme === "dark") {
+						document.documentElement.classList.add("dark-mode");
 					}
 				} catch(e) {}
 			})();
@@ -28,17 +25,14 @@
 		<script>
 			(function() {
 				try {
-					var hash = window.location.hash.slice(1);
-					if (hash) {
-						var state = JSON.parse(decodeURIComponent(atob(hash)));
-						if (state.theme) {
-							var setSelect = function() {
-								var sel = document.querySelector(".theme-select");
-								if (sel) sel.value = state.theme;
-							};
-							setSelect();
-							requestAnimationFrame(setSelect);
-						}
+					var theme = localStorage.getItem("stationeers-gas-diagram-theme");
+					if (theme) {
+						var setSelect = function() {
+							var sel = document.querySelector(".theme-select");
+							if (sel) sel.value = theme;
+						};
+						setSelect();
+						requestAnimationFrame(setSelect);
 					}
 				} catch(e) {}
 			})();
