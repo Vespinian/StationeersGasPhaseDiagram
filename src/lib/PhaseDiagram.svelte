@@ -418,7 +418,7 @@
         if (logScale) {
             const logMin = Math.log10(viewPressMin);
             const logMax = Math.log10(viewPressMax);
-            const logP = Math.log10(Math.max(pressure, viewPressMin));
+            const logP = Math.log10(Math.max(pressure, 0.1));
             return (
                 margin.top +
                 plotHeight() -
