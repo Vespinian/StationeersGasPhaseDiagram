@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { untrack } from "svelte";
     import {
         gasData,
         gasTuning,
@@ -311,7 +312,37 @@
                 .map(([, gas]) => gas.maxLiqK),
             700,
         );
-        return Math.ceil(visibleMax / 100) * 100 + 100;
+        const remainder = visibleMax % 100;
+        return visibleMax - remainder + 100;
+    }
+
+    function calcTempMin(): number {
+        const visibleMin = Math.min(
+            ...Object.entries(gasData)
+                .filter(([key]) => visibleGases[key])
+                .map(([, gas]) => gas.meltK),
+            500,
+        );
+        return visibleMin < 20 ? 0 : visibleMin - 5;
+    }
+
+    function calcLogTempMin(): number {
+        const visibleMin = Math.min(
+            ...Object.entries(gasData)
+                .filter(([key]) => visibleGases[key])
+                .map(([, gas]) => gas.meltK),
+            500,
+        );
+        if (visibleMin < 0.5) return 0.5;
+        if (visibleMin < 5) return 1;
+        if (visibleMin < 10) return 5;
+        if (visibleMin < 20) return 10;
+        if (visibleMin < 50) return 20;
+        if (visibleMin < 100) return 50;
+        if (visibleMin < 200) return 100;
+        if (visibleMin < 500) return 200;
+        if (visibleMin < 1000) return 500;
+        return 1000;
     }
 
     const HARD_TEMP_MIN = -4000;
@@ -325,13 +356,48 @@
     const HARD_LOG_PRESSURE_MAX = 50000;
 
     const tempMax = $derived.by(() => calcTempMax());
+    const tempMin = $derived.by(() => calcTempMin());
+    const tempLogMin = $derived.by(() => calcLogTempMin());
+    const tempLogMax = $derived.by(() => (visibleGases["NaCl"] ? 5000 : 1000));
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
+    const themeColors = $derived(getThemeColors());
+
+    const cachedGasColors = $derived.by(() => {
+        const colors: Record<string, { color: string; labelColor: string }> =
+            {};
+        for (const [key, gas] of Object.entries(gasData)) {
+            colors[key] = {
+                color: getGasColor(gas),
+                labelColor: getGasLabelColor(gas),
+            };
+        }
+        return colors;
+    });
+
     // View state in data coordinates
-    let viewTempMin = getSaved("viewTempMin", 0);
+    let viewTempMin = getSaved("viewTempMin", calcTempMin());
     let viewTempMax = getSaved("viewTempMax", calcTempMax());
     let viewPressMin = getSaved("viewPressMin", 0);
-    let viewPressMax = getSaved("viewPressMax", 6500);
+    let viewPressMax = getSaved("viewPressMax", 6000);
+
+    function isDefaultView(
+        vTempMin: number,
+        vTempMax: number,
+        vPressMin: number,
+        vPressMax: number,
+    ): boolean {
+        const expectedTempMin = logXScale ? tempLogMin : tempMin;
+        const expectedTempMax = logXScale ? tempLogMax : tempMax;
+        const expectedPressMin = logScale ? 5 : 0;
+        const expectedPressMax = logScale ? 10000 : 6000;
+        return (
+            vTempMin === expectedTempMin &&
+            vTempMax === expectedTempMax &&
+            vPressMin === expectedPressMin &&
+            vPressMax === expectedPressMax
+        );
+    }
 
     let canvas: HTMLCanvasElement;
     let canvasWidth = $state(1200);
@@ -366,7 +432,7 @@
         if (logScale) {
             const logMin = Math.log10(viewPressMin);
             const logMax = Math.log10(viewPressMax);
-            const logP = Math.log10(Math.max(pressure, viewPressMin));
+            const logP = Math.log10(Math.max(pressure, 0.1));
             return (
                 margin.top +
                 plotHeight() -
@@ -409,6 +475,9 @@
     }
 
     function niceStep(range: number, targetTicks: number): number {
+        if (range <= 0 || !isFinite(range) || targetTicks <= 0) {
+            return 1;
+        }
         const rough = range / targetTicks;
         const pow10 = Math.pow(10, Math.floor(Math.log10(rough)));
         const frac = rough / pow10;
@@ -421,7 +490,13 @@
     }
 
     function generateTicks(min: number, max: number): number[] {
+        if (!isFinite(min) || !isFinite(max) || max <= min) {
+            return [];
+        }
         const step = niceStep(max - min, 10);
+        if (!isFinite(step) || step <= 0) {
+            return [];
+        }
         const ticks: number[] = [];
         const start = Math.ceil(min / step) * step;
         for (let t = start; t <= max; t += step) {
@@ -431,6 +506,15 @@
     }
 
     function generateLogTicks(min: number, max: number): number[] {
+        if (
+            !isFinite(min) ||
+            !isFinite(max) ||
+            min <= 0 ||
+            max <= 0 ||
+            max <= min
+        ) {
+            return [];
+        }
         const ticks: number[] = [];
         const logMin = Math.floor(Math.log10(min));
         const logMax = Math.ceil(Math.log10(max));
@@ -549,7 +633,14 @@
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
-        const t = getThemeColors();
+        const t = themeColors;
+
+        const xTicks = logXScale
+            ? generateLogTicks(viewTempMin, viewTempMax)
+            : generateTicks(viewTempMin, viewTempMax);
+        const yTicks = logScale
+            ? generateLogTicks(viewPressMin, viewPressMax)
+            : generateTicks(viewPressMin, viewPressMax);
 
         ctx.save();
         ctx.scale(dpr, dpr);
@@ -571,13 +662,6 @@
 
         // Grid
         if (showGrid) {
-            const xTicks = logXScale
-                ? generateLogTicks(viewTempMin, viewTempMax)
-                : generateTicks(viewTempMin, viewTempMax);
-            const yTicks = logScale
-                ? generateLogTicks(viewPressMin, viewPressMax)
-                : generateTicks(viewPressMin, viewPressMax);
-
             ctx.strokeStyle = t.grid;
             ctx.setLineDash([3, 3]);
             ctx.lineWidth = 1;
@@ -644,15 +728,20 @@
         for (const [key, gas] of Object.entries(gasData)) {
             if (!visibleGases[key]) continue;
             const tuning = gasTuning[key];
+            const colors = cachedGasColors[key];
 
-            ctx.strokeStyle = getGasColor(gas);
+            ctx.strokeStyle = colors.color;
             ctx.lineWidth = 3;
             ctx.beginPath();
             let started = false;
 
             for (
-                let t = Math.max(0, Math.floor(viewTempMin));
-                t <= Math.min(tempMax, Math.ceil(viewTempMax));
+                let t = Math.max(0, Math.ceil(viewTempMin));
+                t <=
+                Math.min(
+                    logXScale ? tempLogMax : tempMax,
+                    Math.ceil(viewTempMax),
+                );
                 t += 1
             ) {
                 const p = calcPressure(t, gas, tuning);
@@ -687,7 +776,7 @@
                 ) {
                     const x = scaleX(t);
                     const y = scaleY(curr);
-                    ctx.fillStyle = getGasColor(gas);
+                    ctx.fillStyle = colors.color;
                     ctx.beginPath();
                     ctx.arc(x, y, 5, 0, Math.PI * 2);
                     ctx.fill();
@@ -761,9 +850,6 @@
         }
 
         // X axis ticks
-        const xTicks = logXScale
-            ? generateLogTicks(viewTempMin, viewTempMax)
-            : generateTicks(viewTempMin, viewTempMax);
         ctx.fillStyle = t.tickText;
         ctx.font = "14px sans-serif";
         ctx.textAlign = "center";
@@ -781,9 +867,6 @@
         }
 
         // Y axis ticks
-        const yTicks = logScale
-            ? generateLogTicks(viewPressMin, viewPressMax)
-            : generateTicks(viewPressMin, viewPressMax);
         ctx.fillStyle = t.tickText;
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
@@ -989,6 +1072,7 @@
 
         panPrevSvgY = svgY;
         panPrevSvgX = svgX;
+        graphMoved = true;
     }
 
     function doHover(svgX: number) {
@@ -1071,6 +1155,29 @@
                 viewPressMin + newPressRange,
             );
         }
+        graphMoved = true;
+    }
+
+    function doZoomX(svgX: number, factor: number) {
+        const tempAtCursor = invScaleX(svgX);
+
+        if (logXScale) {
+            const logMin = Math.log10(viewTempMin);
+            const logMax = Math.log10(viewTempMax);
+            const logAtCursor = Math.log10(tempAtCursor);
+            const logRange = logMax - logMin;
+            const newLogRange = logRange * factor;
+            const offset = logAtCursor - logMin;
+            const newLogMin = logAtCursor - offset * factor;
+            const newLogMax = newLogMin + newLogRange;
+            viewTempMin = Math.pow(10, newLogMin);
+            viewTempMax = Math.pow(10, newLogMax);
+        } else {
+            const newTempRange = (viewTempMax - viewTempMin) * factor;
+            viewTempMin = svgX - (svgX - viewTempMin) * factor;
+            viewTempMax = viewTempMin + newTempRange;
+        }
+        graphMoved = true;
     }
 
     function doZoomY(svgY: number, factor: number) {
@@ -1103,6 +1210,7 @@
                 viewPressMin + newPressRange,
             );
         }
+        graphMoved = true;
     }
 
     function handleMouseMove(event: MouseEvent) {
@@ -1116,11 +1224,8 @@
             return;
         }
 
-        if (!doHover(svgX)) {
-            drawGraph();
-        } else {
-            drawGraph();
-        }
+        doHover(svgX);
+        drawGraph();
     }
 
     function handleMouseLeave() {
@@ -1157,6 +1262,14 @@
     let isPanning = $state(false);
     let panPrevSvgX = $state(0);
     let panPrevSvgY = $state(0);
+    let graphMoved = $state(
+        !isDefaultView(
+            saved?.viewTempMin ?? calcTempMin(),
+            saved?.viewTempMax ?? calcTempMax(),
+            saved?.viewPressMin ?? 0,
+            saved?.viewPressMax ?? 6000,
+        ),
+    );
 
     function startInteraction(svgX: number, svgY: number) {
         isPanning = true;
@@ -1201,22 +1314,7 @@
         const factor = event.deltaY > 0 ? 1.15 : 1 / 1.15;
 
         if (event.ctrlKey) {
-            if (logXScale) {
-                const logMin = Math.log10(viewTempMin);
-                const logMax = Math.log10(viewTempMax);
-                const logAtSvgX = Math.log10(invScaleX(svgX));
-                const logRange = logMax - logMin;
-                const newLogRange = logRange * factor;
-                const offset = logAtSvgX - logMin;
-                const newLogMin = logAtSvgX - offset * factor;
-                const newLogMax = newLogMin + newLogRange;
-                viewTempMin = Math.pow(10, newLogMin);
-                viewTempMax = Math.pow(10, newLogMax);
-            } else {
-                const newTempRange = (viewTempMax - viewTempMin) * factor;
-                viewTempMin = svgX - (svgX - viewTempMin) * factor;
-                viewTempMax = viewTempMin + newTempRange;
-            }
+            doZoomX(svgX, factor);
         } else if (event.shiftKey) {
             doZoomY(svgY, factor);
         } else {
@@ -1229,24 +1327,28 @@
 
     function resetView() {
         if (logXScale) {
-            viewTempMin = 10;
-            viewTempMax = visibleGases["NaCl"] ? 5000 : 1000;
+            viewTempMin = tempLogMin;
+            viewTempMax = tempLogMax;
         } else {
-            viewTempMin = -50;
+            viewTempMin = tempMin;
             viewTempMax = tempMax;
         }
         if (logScale) {
             viewPressMin = 5;
         } else {
-            viewPressMin = -100;
+            viewPressMin = 0;
         }
-        viewPressMax = logScale ? 10000 : 6500;
+        viewPressMax = logScale ? 10000 : 6000;
+        graphMoved = false;
         updateLockedPosition();
         drawGraph();
     }
 
     function toggleGas(gasKey: string) {
         visibleGases = { ...visibleGases, [gasKey]: !visibleGases[gasKey] };
+        if (!graphMoved) {
+            resetView();
+        }
         updateLockedPosition();
     }
 
@@ -1255,6 +1357,9 @@
             Object.keys(gasData).map((k) => [k, k !== "He"]),
         );
         updateLockedPosition();
+        if (graphMoved === false) {
+            resetView();
+        }
     }
 
     function clearAllGases() {
@@ -1272,7 +1377,7 @@
     });
 
     let prevLogScale = $state(false);
-    let prevLogXScale = $state(false);
+    let prevLogXScale = $state(untrack(() => logXScale)); // Just get the inital value in here
     let showHelp = $state(false);
     let showMiniLegend = $state(loadShowMiniLegend());
     let shareText = $state("Share");
@@ -1316,7 +1421,7 @@
 
     $effect(() => {
         if (prevLogScale && !logScale) {
-            viewPressMax = 6500;
+            viewPressMax = 6000;
             viewPressMin = 5;
         } else if (!prevLogScale && logScale) {
             viewPressMax = 10000;
@@ -1328,13 +1433,16 @@
 
     $effect(() => {
         if (prevLogXScale && !logXScale) {
-            viewTempMin = 0;
+            viewTempMin = tempMin;
             viewTempMax = tempMax;
         } else if (!prevLogXScale && logXScale) {
             viewTempMin = 10;
             viewTempMax = visibleGases["NaCl"] ? 5000 : 1000;
         }
         prevLogXScale = logXScale;
+        if (isLocked && lockedTemp !== null) {
+            lockedX = scaleX(lockedTemp);
+        }
         drawGraph();
     });
 
@@ -1538,10 +1646,10 @@
                     <div
                         class="mini-legend-item"
                         class:hidden={!visibleGases[key]}
-                        onclick={() => (visibleGases[key] = !visibleGases[key])}
+                        onclick={() => toggleGas(key)}
                         onkeydown={(e) => {
                             if (e.key === "Enter" || e.key === " ")
-                                visibleGases[key] = !visibleGases[key];
+                                toggleGas(key);
                         }}
                         role="button"
                         tabindex="0"

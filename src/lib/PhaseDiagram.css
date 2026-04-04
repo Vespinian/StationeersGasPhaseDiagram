@@ -264,7 +264,7 @@ h2 {
     flex-wrap: wrap;
     gap: 4px;
     max-width: 156px;
-    z-index: 10;
+    z-index: 20;
     background: rgba(30, 42, 61, 0.9);
     padding: 8px;
     border-radius: 4px;
