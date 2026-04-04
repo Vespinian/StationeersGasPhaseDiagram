@@ -71,6 +71,7 @@
     }
 
     const THEME_KEY = "stationeers-gas-diagram-theme";
+    const SHOW_MINI_LEGEND_KEY = "stationeers-gas-diagram-show-mini-legend";
 
     function saveState() {
         const state = {
@@ -110,6 +111,20 @@
     function saveTheme() {
         try {
             localStorage.setItem(THEME_KEY, theme);
+        } catch {}
+    }
+
+    function loadShowMiniLegend(): boolean {
+        try {
+            const raw = localStorage.getItem(SHOW_MINI_LEGEND_KEY);
+            return raw === "true";
+        } catch {}
+        return false;
+    }
+
+    function saveShowMiniLegend() {
+        try {
+            localStorage.setItem(SHOW_MINI_LEGEND_KEY, String(showMiniLegend));
         } catch {}
     }
 
@@ -1170,7 +1185,7 @@
     let prevLogScale = $state(false);
     let prevLogXScale = $state(false);
     let showHelp = $state(false);
-    let showMiniLegend = $state(false);
+    let showMiniLegend = $state(loadShowMiniLegend());
     let shareText = $state("Share");
     let shareUrl = $state("");
     let showShareUrl = $state(false);
@@ -1247,6 +1262,11 @@
             document.documentElement.classList.add("dark-mode");
         }
         saveTheme();
+    });
+
+    $effect(() => {
+        void showMiniLegend;
+        saveShowMiniLegend();
     });
 
     $effect(() => {
