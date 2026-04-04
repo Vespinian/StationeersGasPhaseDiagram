@@ -910,37 +910,6 @@
         return { x: clientX - rect.left, y: clientY - rect.top };
     }
 
-    function doRescaleY(svgY: number) {
-        const dy = svgY - rescaleStartSvgY;
-        const factor = 1 + dy / plotHeight();
-        const center = (rescaleStartPressMin + rescaleStartPressMax) / 2;
-        const halfRange = Math.max(
-            1,
-            ((rescaleStartPressMax - rescaleStartPressMin) / 2) * factor,
-        );
-        viewPressMin = Math.max(pressureZoomMin, center - halfRange);
-        viewPressMax = center + halfRange;
-    }
-
-    function doRescaleX(svgX: number) {
-        const dx = svgX - rescaleStartSvgX;
-        if (logXScale) {
-            const logMin = Math.log10(rescaleStartTempMin);
-            const logMax = Math.log10(rescaleStartTempMax);
-            const logRange = logMax - logMin;
-            const dLog = (dx / plotWidth()) * logRange;
-            const newLogMin = logMin + dLog;
-            const newLogMax = logMax + dLog;
-            viewTempMin = Math.pow(10, newLogMin);
-            viewTempMax = Math.pow(10, newLogMax);
-        } else {
-            const factor = 1 + dx / plotWidth();
-            const newRange =
-                (rescaleStartTempMax - rescaleStartTempMin) * factor;
-            viewTempMin = rescaleStartTempMin;
-            viewTempMax = rescaleStartTempMin + newRange;
-        }
-    }
 
     function doPan(svgX: number, svgY: number) {
         const dx = (svgX - panStartSvgX) / plotWidth();
@@ -1091,22 +1060,6 @@
     function handleMouseMove(event: MouseEvent) {
         const { x: svgX, y: svgY } = getSvgCoords(event.clientX, event.clientY);
 
-        if (isRescalingY) {
-            doRescaleY(svgY);
-            updateLockedPosition();
-            updateHoverCursor(svgX);
-            drawGraph();
-            return;
-        }
-
-        if (isRescalingX) {
-            doRescaleX(svgX);
-            updateLockedPosition();
-            updateHoverCursor(svgX);
-            drawGraph();
-            return;
-        }
-
         if (isPanning) {
             doPan(svgX, svgY);
             updateLockedPosition();
@@ -1126,8 +1079,6 @@
         hoveredX = null;
         hoveredTemp = null;
         hoveredValues = [];
-        isRescalingX = false;
-        isRescalingY = false;
         isPanning = false;
         drawGraph();
     }
@@ -1135,25 +1086,14 @@
     function handleCanvasMouseOver(event: MouseEvent) {
         const { x: svgX, y: svgY } = getSvgCoords(event.clientX, event.clientY);
 
-        if (isPanning || isRescalingY || isRescalingX) return;
+        if (isPanning) return;
 
-        if (
-            svgX < margin.left &&
-            svgY >= margin.top &&
-            svgY <= margin.top + plotHeight()
-        ) {
-            canvas.classList.add("rescale-y");
-            canvas.classList.remove("rescale-x");
-        } else if (
-            svgY > margin.top + plotHeight() &&
-            svgX >= margin.left &&
-            svgX <= margin.left + plotWidth()
-        ) {
-            canvas.classList.add("rescale-x");
-            canvas.classList.remove("rescale-y");
+        if (svgX < margin.left && svgY >= margin.top && svgY <= margin.top + plotHeight()) {
+            canvas.style.cursor = "ns-resize";
+        } else if (svgY > margin.top + plotHeight() && svgX >= margin.left && svgX <= margin.left + plotWidth()) {
+            canvas.style.cursor = "ew-resize";
         } else {
-            canvas.classList.remove("rescale-y");
-            canvas.classList.remove("rescale-x");
+            canvas.style.cursor = "";
         }
     }
 
@@ -1166,42 +1106,7 @@
     let panStartViewPressMin = $state(0);
     let panStartViewPressMax = $state(0);
 
-    // Axis rescale state
-    let isRescalingY = $state(false);
-    let rescaleStartSvgY = $state(0);
-    let rescaleStartPressMin = $state(0);
-    let rescaleStartPressMax = $state(0);
-
-    let isRescalingX = $state(false);
-    let rescaleStartSvgX = $state(0);
-    let rescaleStartTempMin = $state(0);
-    let rescaleStartTempMax = $state(0);
-
     function startInteraction(svgX: number, svgY: number) {
-        if (
-            svgX < margin.left &&
-            svgY >= margin.top &&
-            svgY <= margin.top + plotHeight()
-        ) {
-            isRescalingY = true;
-            rescaleStartSvgY = svgY;
-            rescaleStartPressMin = viewPressMin;
-            rescaleStartPressMax = viewPressMax;
-            return;
-        }
-
-        if (
-            svgY > margin.top + plotHeight() &&
-            svgX >= margin.left &&
-            svgX <= margin.left + plotWidth()
-        ) {
-            isRescalingX = true;
-            rescaleStartSvgX = svgX;
-            rescaleStartTempMin = viewTempMin;
-            rescaleStartTempMax = viewTempMax;
-            return;
-        }
-
         isPanning = true;
         panStartSvgX = svgX;
         panStartSvgY = svgY;
@@ -1224,8 +1129,6 @@
 
     function handleMouseUp() {
         isPanning = false;
-        isRescalingY = false;
-        isRescalingX = false;
     }
 
     function handleTouchMove(event: TouchEvent) {
@@ -1557,12 +1460,6 @@
                 </li>
                 <li><strong>Click + drag</strong> — Pan the view</li>
                 <li>
-                    <strong>Drag Y-axis labels</strong> — Rescale pressure axis
-                </li>
-                <li>
-                    <strong>Drag X-axis labels</strong> — Rescale temperature axis
-                </li>
-                <li>
                     <strong>L</strong> or <strong>Middle mouse</strong> — Lock/unlock cursor at current position
                 </li>
                 <li>
@@ -1612,8 +1509,6 @@
             onmouseenter={handleCanvasMouseOver}
             ontouchmove={handleTouchMove}
             class:panning={isPanning}
-            class:rescale-y={isRescalingY}
-            class:rescale-x={isRescalingX}
         ></canvas>
 
         {#if (isLocked && lockedTemp !== null && lockedValues.length > 0) || (!isLocked && hoveredTemp !== null && hoveredValues.length > 0)}
