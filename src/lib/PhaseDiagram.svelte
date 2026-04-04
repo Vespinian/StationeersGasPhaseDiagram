@@ -52,7 +52,7 @@
         return null;
     }
 
-    function loadState() {
+    function loadState(): Record<string, unknown> | null {
         const urlState = loadFromUrl();
         if (urlState) {
             try {
@@ -65,7 +65,24 @@
                     "#" +
                     encoded;
             } catch {}
-            return urlState;
+            const state: Record<string, unknown> = {};
+            if (urlState.sg !== undefined) state.showGrid = urlState.sg;
+            if (urlState.ls !== undefined) state.logScale = urlState.ls;
+            if (urlState.lx !== undefined) state.logXScale = urlState.lx;
+            if (urlState.ip !== undefined) state.invertPanY = urlState.ip;
+            if (urlState.vg !== undefined) {
+                const hidden = urlState.vg as string[];
+                state.visibleGases = Object.fromEntries(
+                    Object.keys(gasData).map((k) => [k, !hidden.includes(k)]),
+                );
+            }
+            if (urlState.tmn !== undefined) state.viewTempMin = urlState.tmn;
+            if (urlState.tmx !== undefined) state.viewTempMax = urlState.tmx;
+            if (urlState.pmn !== undefined) state.viewPressMin = urlState.pmn;
+            if (urlState.pmx !== undefined) state.viewPressMax = urlState.pmx;
+            if (urlState.lk !== undefined) state.isLocked = urlState.lk;
+            if (urlState.lt !== undefined) state.lockedTemp = urlState.lt;
+            return state;
         }
         return null;
     }
@@ -74,19 +91,26 @@
     const SHOW_MINI_LEGEND_KEY = "stationeers-gas-diagram-show-mini-legend";
 
     function saveState() {
-        const state = {
-            showGrid,
-            logScale,
-            logXScale,
-            invertPanY,
-            visibleGases,
-            viewTempMin,
-            viewTempMax,
-            viewPressMin,
-            viewPressMax,
-            isLocked,
-            lockedTemp,
-        };
+        const allKeys = Object.keys(gasData);
+        const hiddenKeys = allKeys.filter((k) => !visibleGases[k]);
+        const state: Record<string, unknown> = {};
+        if (hiddenKeys.length > 0 && hiddenKeys.length < allKeys.length) {
+            state.vg = hiddenKeys;
+        }
+        if (viewTempMin !== tempMin || viewTempMax !== tempMax) {
+            state.tmn = viewTempMin;
+            state.tmx = viewTempMax;
+        }
+        if (viewPressMin !== pressureMin || viewPressMax !== pressureMax) {
+            state.pmn = viewPressMin;
+            state.pmx = viewPressMax;
+        }
+        if (showGrid !== true) state.sg = showGrid;
+        if (logScale !== false) state.ls = logScale;
+        if (logXScale !== false) state.lx = logXScale;
+        if (invertPanY !== true) state.ip = invertPanY;
+        if (isLocked !== false) state.lk = isLocked;
+        if (lockedTemp !== null) state.lt = lockedTemp;
         try {
             const encoded = btoa(encodeURIComponent(JSON.stringify(state)));
             shareUrl =
@@ -128,7 +152,30 @@
         } catch {}
     }
 
-    const saved = loadState();
+    const saved = loadState() as SavedState | null;
+    const defaultVisibleGases = Object.fromEntries(
+        Object.keys(gasData).map((k) => [k, k !== "He"]),
+    );
+
+    type SavedState = {
+        showGrid?: boolean;
+        logScale?: boolean;
+        logXScale?: boolean;
+        invertPanY?: boolean;
+        visibleGases?: Record<string, boolean>;
+        viewTempMin?: number;
+        viewTempMax?: number;
+        viewPressMin?: number;
+        viewPressMax?: number;
+        isLocked?: boolean;
+        lockedTemp?: number | null;
+    };
+
+    function getSaved<T>(key: keyof SavedState, fallback: T): T {
+        const val = saved?.[key];
+        if (typeof val === typeof fallback) return val as T;
+        return fallback;
+    }
 
     // Force initial save after everything is mounted
     $effect(() => {
@@ -137,16 +184,13 @@
         }
     });
 
-    let showGrid = $state(saved?.showGrid ?? true);
-    let logScale = $state(saved?.logScale ?? false);
-    let logXScale = $state(saved?.logXScale ?? false);
-    let invertPanY = $state(saved?.invertPanY ?? true);
+    let showGrid = $state(getSaved("showGrid", true));
+    let logScale = $state(getSaved("logScale", false));
+    let logXScale = $state(getSaved("logXScale", false));
+    let invertPanY = $state(getSaved("invertPanY", true));
     let theme = $state<"stationeers" | "light" | "dark">(loadTheme());
     let visibleGases: Record<string, boolean> = $state(
-        saved?.visibleGases ??
-            Object.fromEntries(
-                Object.keys(gasData).map((k) => [k, k !== "He"]),
-            ),
+        getSaved("visibleGases", defaultVisibleGases),
     );
 
     type SortKey =
@@ -226,10 +270,10 @@
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
     // View state in data coordinates
-    let viewTempMin = $state(saved?.viewTempMin ?? tempMin);
-    let viewTempMax = $state(saved?.viewTempMax ?? calcTempMax());
-    let viewPressMin = $state(saved?.viewPressMin ?? pressureMin);
-    let viewPressMax = $state(saved?.viewPressMax ?? pressureMax);
+    let viewTempMin = getSaved("viewTempMin", tempMin);
+    let viewTempMax = getSaved("viewTempMax", calcTempMax());
+    let viewPressMin = getSaved("viewPressMin", pressureMin);
+    let viewPressMax = getSaved("viewPressMax", pressureMax);
 
     let canvas: HTMLCanvasElement;
     let canvasWidth = $state(1200);
@@ -882,12 +926,7 @@
         return true;
     }
 
-    function doZoom(
-        svgX: number,
-        svgY: number,
-        factor: number,
-        zoomingOut: boolean,
-    ) {
+    function doZoom(svgX: number, svgY: number, factor: number) {
         const tempAtCursor =
             isLocked && lockedTemp !== null ? lockedTemp : invScaleX(svgX);
         const pressAtCursor = invScaleY(svgY);
@@ -932,7 +971,7 @@
         }
     }
 
-    function doZoomY(svgY: number, factor: number, zoomingOut: boolean) {
+    function doZoomY(svgY: number, factor: number) {
         const pressAtCursor = invScaleY(svgY);
 
         if (logScale) {
@@ -1090,16 +1129,6 @@
         isRescalingX = false;
     }
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    function handleTouchStart(event: TouchEvent) {
-        if (event.touches.length === 1) {
-            touchStartX = event.touches[0].clientX;
-            touchStartY = event.touches[0].clientY;
-        }
-    }
-
     function handleTouchMove(event: TouchEvent) {
         if (event.touches.length === 1) {
             const { x: svgX } = getSvgCoords(
@@ -1120,7 +1149,6 @@
         const { x: svgX, y: svgY } = getSvgCoords(event.clientX, event.clientY);
 
         const factor = event.deltaY > 0 ? 1.15 : 1 / 1.15;
-        const zoomingOut = event.deltaY > 0;
 
         if (event.ctrlKey) {
             if (logXScale) {
@@ -1140,9 +1168,9 @@
                 viewTempMax = viewTempMin + newTempRange;
             }
         } else if (event.shiftKey) {
-            doZoomY(svgY, factor, zoomingOut);
+            doZoomY(svgY, factor);
         } else {
-            doZoom(svgX, svgY, factor, zoomingOut);
+            doZoom(svgX, svgY, factor);
         }
 
         updateLockedPosition();
@@ -1216,7 +1244,6 @@
             try {
                 const hash = window.location.hash.slice(1);
                 if (hash) {
-                    const state = JSON.parse(decodeURIComponent(atob(hash)));
                     shareUrl =
                         window.location.origin +
                         window.location.pathname +
@@ -1281,7 +1308,7 @@
 
     $effect(() => {
         if (!canvas || initLock) return;
-        if (saved?.isLocked && typeof saved?.lockedTemp === "number") {
+        if (saved && saved.isLocked && typeof saved.lockedTemp === "number") {
             initSave = false;
             isLocked = true;
             const temp = saved.lockedTemp as number;
@@ -1367,8 +1394,7 @@
         </div>
         <div class="control-row">
             <button onclick={resetView} class="btn">Reset View</button>
-            <button onclick={resetGases} class="btn"
-                >Reset Gas Selection</button
+            <button onclick={resetGases} class="btn">Reset Gas Selection</button
             >
             <button onclick={copyShare} class="btn">{shareText}</button>
             <button
@@ -1450,6 +1476,12 @@
                         class="mini-legend-item"
                         class:hidden={!visibleGases[key]}
                         onclick={() => (visibleGases[key] = !visibleGases[key])}
+                        onkeydown={(e) => {
+                            if (e.key === "Enter" || e.key === " ")
+                                visibleGases[key] = !visibleGases[key];
+                        }}
+                        role="button"
+                        tabindex="0"
                         title={gas.name}
                     >
                         <img src={gasIcons[key]} alt={gas.symbol} />
