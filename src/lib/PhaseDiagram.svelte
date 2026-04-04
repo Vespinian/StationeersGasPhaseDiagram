@@ -321,6 +321,11 @@
     const pressureZoomMin = 0.001;
     const pressureZoomMax = 1000000;
 
+    const HARD_TEMP_MIN = 0.1;
+    const HARD_TEMP_MAX = 1000000;
+    const HARD_PRESSURE_MIN = 0.5;
+    const HARD_PRESSURE_MAX = 100000;
+
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
     // View state in data coordinates
@@ -910,49 +915,65 @@
         return { x: clientX - rect.left, y: clientY - rect.top };
     }
 
-
     function doPan(svgX: number, svgY: number) {
-        const dx = (svgX - panStartSvgX) / plotWidth();
+        const dx = ((svgX - panStartSvgX) / plotWidth()) * -1;
         if (logXScale) {
-            const logMin = Math.log10(panStartViewTempMin);
-            const logMax = Math.log10(panStartViewTempMax);
-            const logRange = logMax - logMin;
-            const dLog = dx * logRange;
-            viewTempMin = Math.max(tempZoomMin, Math.pow(10, logMin - dLog));
-            viewTempMax = Math.min(tempZoomMax, Math.pow(10, logMax - dLog));
+            // const logMin = Math.log10(qanStartViewTempMin);
+            // const logMax = Math.log10(panStartViewTempMax);
+            // const logRange = logMax - logMin;
+            // const dLog = dx * logRange;
+            // viewTempMin = Math.max(HARD_TEMP_MIN, Math.pow(10, logMin - dLog));
+            // viewTempMax = Math.min(HARD_TEMP_MAX, Math.pow(10, logMax - dLog));
         } else {
-            const tempDelta =
-                panStartViewTempMin -
-                dx * (panStartViewTempMax - panStartViewTempMin);
-            const range = panStartViewTempMax - panStartViewTempMin;
-            viewTempMin = Math.max(tempZoomMin, tempDelta);
-            viewTempMax = Math.min(tempZoomMax, tempDelta + range);
+            const wantedDelta = (viewTempMax - viewTempMin) * dx;
+            if (panStartViewTempMax + wantedDelta > HARD_TEMP_MAX) {
+                const actualDelta = HARD_TEMP_MAX - viewTempMin;
+                viewTempMin = viewTempMin + actualDelta;
+                viewTempMax = viewTempMax + actualDelta;
+            } else if (viewTempMin + wantedDelta < HARD_TEMP_MIN) {
+                const actualDelta = viewTempMin - HARD_TEMP_MIN;
+                viewTempMin = viewTempMin + actualDelta;
+                viewTempMax = viewTempMax + actualDelta;
+            } else {
+                viewTempMin = viewTempMin + wantedDelta;
+                viewTempMax = viewTempMax + wantedDelta;
+            }
         }
 
         const dy = (svgY - panStartSvgY) / plotHeight();
         const direction = invertPanY ? 1 : -1;
 
         if (logScale) {
-            const logMin = Math.log10(panStartViewPressMin);
-            const logMax = Math.log10(panStartViewPressMax);
-            const logRange = logMax - logMin;
-            const dLog = dy * logRange * direction;
-            viewPressMin = Math.max(
-                pressureZoomMin,
-                Math.pow(10, logMin + dLog),
-            );
-            viewPressMax = Math.min(
-                pressureZoomMax,
-                Math.pow(10, logMax + dLog),
-            );
+            // const logMin = Math.log10(panStartViewPressMin);
+            // const logMax = Math.log10(panStartViewPressMax);
+            // const logRange = logMax - logMin;
+            // const dLog = dy * logRange * direction;
+            // viewPressMin = Math.max(
+            //     HARD_PRESSURE_MIN,
+            //     Math.pow(10, logMin + dLog),
+            // );
+            // viewPressMax = Math.min(
+            //     HARD_PRESSURE_MAX,
+            //     Math.pow(10, logMax + dLog),
+            // );
         } else {
-            const pressDelta =
-                dy * (panStartViewPressMax - panStartViewPressMin) * direction;
-            const pRange = panStartViewPressMax - panStartViewPressMin;
-            let newPressMin = panStartViewPressMin + pressDelta;
-            viewPressMin = Math.max(pressureZoomMin, newPressMin);
-            viewPressMax = Math.min(pressureZoomMax, newPressMin + pRange);
+            const wantedDelta = (viewPressMax - viewPressMin) * dy * direction;
+            if (panStartViewPressMax + wantedDelta > HARD_PRESSURE_MAX) {
+                const actualDelta = HARD_PRESSURE_MAX - viewPressMin;
+                viewPressMin = viewPressMin + actualDelta;
+                viewPressMax = viewPressMax + actualDelta;
+            } else if (viewPressMin + wantedDelta < HARD_PRESSURE_MIN) {
+                const actualDelta = viewPressMin - HARD_PRESSURE_MIN;
+                viewPressMin = viewPressMin + actualDelta;
+                viewPressMax = viewPressMax + actualDelta;
+            } else {
+                viewPressMin = viewPressMin + wantedDelta;
+                viewPressMax = viewPressMax + wantedDelta;
+            }
         }
+
+        panStartSvgY = svgY;
+        panStartSvgX = svgX;
     }
 
     function doHover(svgX: number) {
@@ -1088,9 +1109,17 @@
 
         if (isPanning) return;
 
-        if (svgX < margin.left && svgY >= margin.top && svgY <= margin.top + plotHeight()) {
+        if (
+            svgX < margin.left &&
+            svgY >= margin.top &&
+            svgY <= margin.top + plotHeight()
+        ) {
             canvas.style.cursor = "ns-resize";
-        } else if (svgY > margin.top + plotHeight() && svgX >= margin.left && svgX <= margin.left + plotWidth()) {
+        } else if (
+            svgY > margin.top + plotHeight() &&
+            svgX >= margin.left &&
+            svgX <= margin.left + plotWidth()
+        ) {
             canvas.style.cursor = "ew-resize";
         } else {
             canvas.style.cursor = "";
@@ -1460,7 +1489,8 @@
                 </li>
                 <li><strong>Click + drag</strong> — Pan the view</li>
                 <li>
-                    <strong>L</strong> or <strong>Middle mouse</strong> — Lock/unlock cursor at current position
+                    <strong>L</strong> or <strong>Middle mouse</strong> — Lock/unlock
+                    cursor at current position
                 </li>
                 <li>
                     <strong>Click legend row</strong> — Toggle gas visibility
