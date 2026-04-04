@@ -172,8 +172,7 @@
                 window.location.pathname +
                 "#" +
                 encoded;
-            history.replaceState(null, "", window.location.pathname);
-            if (window.location.hash.slice(1) == null) {
+            if (window.location.hash.slice(1) === "") {
                 saveLocalState(encoded);
             }
         } catch {}
@@ -233,13 +232,6 @@
         if (typeof val === typeof fallback) return val as T;
         return fallback;
     }
-
-    // Force initial save after everything is mounted
-    $effect(() => {
-        if (canvas) {
-            requestAnimationFrame(() => saveState());
-        }
-    });
 
     let showGrid = $state(getSaved("showGrid", true));
     let logScale = $state(getSaved("logScale", false));
@@ -1397,16 +1389,18 @@
         void logXScale;
         void invertPanY;
         void visibleGases;
-        void sortKey;
-        void sortAsc;
         void viewTempMin;
         void viewTempMax;
         void viewPressMin;
         void viewPressMax;
-        void theme;
         void isLocked;
         void lockedTemp;
-        if (initSave) saveState();
+        if (initSave) {
+            initSave = false;
+            saveState();
+        } else {
+            saveState();
+        }
     });
 
     $effect(() => {
