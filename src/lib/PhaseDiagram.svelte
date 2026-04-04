@@ -1497,7 +1497,6 @@
             onmousedown={handleMouseDown}
             onmouseup={handleMouseUp}
             onmouseenter={handleCanvasMouseOver}
-            ontouchstart={handleTouchStart}
             ontouchmove={handleTouchMove}
             class:panning={isPanning}
             class:rescale-y={isRescalingY}
