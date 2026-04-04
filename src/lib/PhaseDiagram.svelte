@@ -721,10 +721,7 @@
             let started = false;
 
             for (
-                let t = Math.max(
-                    logXScale ? tempLogMin : tempMin,
-                    Math.ceil(viewTempMin),
-                );
+                let t = Math.max(0, Math.ceil(viewTempMin));
                 t <=
                 Math.min(
                     logXScale ? tempLogMax : tempMax,
