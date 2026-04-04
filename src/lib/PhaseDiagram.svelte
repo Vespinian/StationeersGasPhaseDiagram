@@ -206,9 +206,9 @@
 
     function scaleX(tempK: number): number {
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, viewTempMin));
-            const logMax = Math.log10(Math.max(10, viewTempMax));
-            const logT = Math.log10(Math.max(10, tempK));
+            const logMin = Math.log10(viewTempMin);
+            const logMax = Math.log10(viewTempMax);
+            const logT = Math.log10(tempK);
             return (
                 margin.left +
                 ((logT - logMin) / (logMax - logMin)) * plotWidth()
@@ -241,8 +241,8 @@
 
     function invScaleX(svgX: number): number {
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, viewTempMin));
-            const logMax = Math.log10(Math.max(10, viewTempMax));
+            const logMin = Math.log10(viewTempMin);
+            const logMax = Math.log10(viewTempMax);
             const ratio = (svgX - margin.left) / plotWidth();
             return Math.pow(10, logMin + ratio * (logMax - logMin));
         }
@@ -759,13 +759,13 @@
     function doRescaleX(svgX: number) {
         const dx = svgX - rescaleStartSvgX;
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, rescaleStartTempMin));
-            const logMax = Math.log10(Math.max(10, rescaleStartTempMax));
+            const logMin = Math.log10(rescaleStartTempMin);
+            const logMax = Math.log10(rescaleStartTempMax);
             const logRange = logMax - logMin;
             const dLog = (dx / plotWidth()) * logRange;
             const newLogMin = logMin + dLog;
             const newLogMax = logMax + dLog;
-            viewTempMin = Math.max(10, Math.pow(10, newLogMin));
+            viewTempMin = Math.pow(10, newLogMin);
             viewTempMax = Math.pow(10, newLogMax);
         } else {
             const factor = 1 + dx / plotWidth();
@@ -779,11 +779,11 @@
     function doPan(svgX: number, svgY: number) {
         const dx = (svgX - panStartSvgX) / plotWidth();
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, panStartViewTempMin));
-            const logMax = Math.log10(Math.max(10, panStartViewTempMax));
+            const logMin = Math.log10(panStartViewTempMin);
+            const logMax = Math.log10(panStartViewTempMax);
             const logRange = logMax - logMin;
             const dLog = dx * logRange;
-            viewTempMin = Math.max(10, Math.pow(10, logMin - dLog));
+            viewTempMin = Math.pow(10, logMin - dLog);
             viewTempMax = Math.pow(10, logMax - dLog);
         } else {
             const tempDelta =
@@ -1084,15 +1084,15 @@
 
         if (event.ctrlKey) {
             if (logXScale) {
-                const logMin = Math.log10(Math.max(10, viewTempMin));
-                const logMax = Math.log10(Math.max(10, viewTempMax));
-                const logAtSvgX = Math.log10(Math.max(10, invScaleX(svgX)));
+                const logMin = Math.log10(viewTempMin);
+                const logMax = Math.log10(viewTempMax);
+                const logAtSvgX = Math.log10(invScaleX(svgX));
                 const logRange = logMax - logMin;
                 const newLogRange = logRange * factor;
                 const offset = logAtSvgX - logMin;
                 const newLogMin = logAtSvgX - offset * factor;
                 const newLogMax = newLogMin + newLogRange;
-                viewTempMin = Math.max(10, Math.pow(10, newLogMin));
+                viewTempMin = Math.pow(10, newLogMin);
                 viewTempMax = Math.pow(10, newLogMax);
             } else {
                 const newTempRange = (viewTempMax - viewTempMin) * factor;
@@ -1148,6 +1148,25 @@
     let shareText = $state("Share");
     let shareUrl = $state("");
     let showShareUrl = $state(false);
+    let urlGenerated = $state(false);
+
+    async function copyShare() {
+        saveState();
+        shareUrl = "";
+        setTimeout(() => {
+            saveState();
+            urlGenerated = true;
+            setTimeout(() => urlGenerated = false, 1500);
+        }, 0);
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            shareText = "Copied!";
+        } catch {
+            showShareUrl = true;
+            return;
+        }
+        setTimeout(function() { shareText = "Share"; }, 1500);
+    }
 
     $effect(() => {
         if (!shareUrl) {
@@ -1160,18 +1179,6 @@
             } catch {}
         }
     });
-
-    async function copyShare() {
-        try {
-            await navigator.clipboard.writeText(shareUrl);
-            shareText = "Copied!";
-        } catch {
-            showShareUrl = true;
-            shareText = "Select URL below";
-            return;
-        }
-        setTimeout(function() { shareText = "Share"; }, 1500);
-    }
 
     $effect(() => {
         if (prevLogScale && !logScale) {
@@ -1322,6 +1329,7 @@
                 readonly 
                 value={shareUrl} 
                 class="share-url" 
+                class:share-url-glow={urlGenerated}
                 onclick={(e) => (e.target as HTMLInputElement).select()}
             />
             <button onclick={() => { showShareUrl = false; shareText = "Share"; }} class="share-close">×</button>

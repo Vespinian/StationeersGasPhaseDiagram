@@ -103,6 +103,21 @@ h2 {
     font-family: monospace;
 }
 
+.share-url-glow {
+    animation: inputGlow 1.5s ease-out;
+}
+
+@keyframes inputGlow {
+    0% {
+        box-shadow: 0 0 15px rgba(100, 180, 255, 0.8);
+        border-color: rgba(100, 180, 255, 0.8);
+    }
+    100% {
+        box-shadow: none;
+        border-color: rgba(100, 140, 200, 0.2);
+    }
+}
+
 .share-close {
     background: transparent;
     border: none;
