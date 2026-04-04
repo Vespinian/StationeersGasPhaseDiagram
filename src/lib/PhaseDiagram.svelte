@@ -43,50 +43,154 @@
         PWa: pollutedwaterIcon,
     };
 
-    const STORAGE_KEY = "stationeers-gas-diagram-state";
-
-    function loadState() {
+    function loadFromUrl() {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) return JSON.parse(raw);
+            const hash = window.location.hash.slice(1);
+            if (!hash) return null;
+            return JSON.parse(decodeURIComponent(atob(hash)));
         } catch {}
         return null;
     }
 
+    function loadState(): Record<string, unknown> | null {
+        const urlState = loadFromUrl();
+        if (urlState) {
+            try {
+                const encoded = btoa(
+                    encodeURIComponent(JSON.stringify(urlState)),
+                );
+                shareUrl =
+                    window.location.origin +
+                    window.location.pathname +
+                    "#" +
+                    encoded;
+            } catch {}
+            const state: Record<string, unknown> = {};
+            if (urlState.sg !== undefined) state.showGrid = urlState.sg;
+            if (urlState.ls !== undefined) state.logScale = urlState.ls;
+            if (urlState.lx !== undefined) state.logXScale = urlState.lx;
+            if (urlState.ip !== undefined) state.invertPanY = urlState.ip;
+            if (urlState.vg !== undefined) {
+                const hidden = urlState.vg as string[];
+                state.visibleGases = Object.fromEntries(
+                    Object.keys(gasData).map((k) => [k, !hidden.includes(k)]),
+                );
+            }
+            if (urlState.tmn !== undefined) state.viewTempMin = urlState.tmn;
+            if (urlState.tmx !== undefined) state.viewTempMax = urlState.tmx;
+            if (urlState.pmn !== undefined) state.viewPressMin = urlState.pmn;
+            if (urlState.pmx !== undefined) state.viewPressMax = urlState.pmx;
+            if (urlState.lk !== undefined) state.isLocked = urlState.lk;
+            if (urlState.lt !== undefined) state.lockedTemp = urlState.lt;
+            return state;
+        }
+        return null;
+    }
+
+    const THEME_KEY = "stationeers-gas-diagram-theme";
+    const SHOW_MINI_LEGEND_KEY = "stationeers-gas-diagram-show-mini-legend";
+
     function saveState() {
+        const allKeys = Object.keys(gasData);
+        const hiddenKeys = allKeys.filter((k) => !visibleGases[k]);
+        const state: Record<string, unknown> = {};
+        if (hiddenKeys.length > 0 && hiddenKeys.length < allKeys.length) {
+            state.vg = hiddenKeys;
+        }
+        if (viewTempMin !== tempMin || viewTempMax !== tempMax) {
+            state.tmn = viewTempMin;
+            state.tmx = viewTempMax;
+        }
+        if (viewPressMin !== pressureMin || viewPressMax !== pressureMax) {
+            state.pmn = viewPressMin;
+            state.pmx = viewPressMax;
+        }
+        if (showGrid !== true) state.sg = showGrid;
+        if (logScale !== false) state.ls = logScale;
+        if (logXScale !== false) state.lx = logXScale;
+        if (invertPanY !== true) state.ip = invertPanY;
+        if (isLocked !== false) state.lk = isLocked;
+        if (lockedTemp !== null) state.lt = lockedTemp;
         try {
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify({
-                    showGrid,
-                    logScale,
-                    logXScale,
-                    invertPanY,
-                    theme,
-                    visibleGases,
-                    viewTempMin,
-                    viewTempMax,
-                    viewPressMin,
-                    viewPressMax,
-                }),
-            );
+            const encoded = btoa(encodeURIComponent(JSON.stringify(state)));
+            shareUrl =
+                window.location.origin +
+                window.location.pathname +
+                "#" +
+                encoded;
+            history.replaceState(null, "", window.location.pathname);
         } catch {}
     }
 
-    const saved = loadState();
+    function loadTheme(): "stationeers" | "light" | "dark" {
+        try {
+            const raw = localStorage.getItem(THEME_KEY);
+            if (raw === "light" || raw === "dark" || raw === "stationeers") {
+                return raw;
+            }
+        } catch {}
+        return "stationeers";
+    }
 
-    let showGrid = $state(saved?.showGrid ?? true);
-    let logScale = $state(saved?.logScale ?? false);
-    let logXScale = $state(saved?.logXScale ?? false);
-    let invertPanY = $state(saved?.invertPanY ?? true);
-    let theme = $state<"stationeers" | "light" | "dark">(
-        saved?.theme ?? "stationeers",
+    function saveTheme() {
+        try {
+            localStorage.setItem(THEME_KEY, theme);
+        } catch {}
+    }
+
+    function loadShowMiniLegend(): boolean {
+        try {
+            const raw = localStorage.getItem(SHOW_MINI_LEGEND_KEY);
+            return raw === "true";
+        } catch {}
+        return false;
+    }
+
+    function saveShowMiniLegend() {
+        try {
+            localStorage.setItem(SHOW_MINI_LEGEND_KEY, String(showMiniLegend));
+        } catch {}
+    }
+
+    const saved = loadState() as SavedState | null;
+    const defaultVisibleGases = Object.fromEntries(
+        Object.keys(gasData).map((k) => [k, k !== "He"]),
     );
+
+    type SavedState = {
+        showGrid?: boolean;
+        logScale?: boolean;
+        logXScale?: boolean;
+        invertPanY?: boolean;
+        visibleGases?: Record<string, boolean>;
+        viewTempMin?: number;
+        viewTempMax?: number;
+        viewPressMin?: number;
+        viewPressMax?: number;
+        isLocked?: boolean;
+        lockedTemp?: number | null;
+    };
+
+    function getSaved<T>(key: keyof SavedState, fallback: T): T {
+        const val = saved?.[key];
+        if (typeof val === typeof fallback) return val as T;
+        return fallback;
+    }
+
+    // Force initial save after everything is mounted
+    $effect(() => {
+        if (canvas) {
+            requestAnimationFrame(() => saveState());
+        }
+    });
+
+    let showGrid = $state(getSaved("showGrid", true));
+    let logScale = $state(getSaved("logScale", false));
+    let logXScale = $state(getSaved("logXScale", false));
+    let invertPanY = $state(getSaved("invertPanY", true));
+    let theme = $state<"stationeers" | "light" | "dark">(loadTheme());
     let visibleGases: Record<string, boolean> = $state(
-        saved?.visibleGases ??
-            Object.fromEntries(
-                Object.keys(gasData).map((k) => [k, k !== "He"]),
-            ),
+        getSaved("visibleGases", defaultVisibleGases),
     );
 
     type SortKey =
@@ -166,10 +270,10 @@
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
     // View state in data coordinates
-    let viewTempMin = $state(saved?.viewTempMin ?? tempMin);
-    let viewTempMax = $state(saved?.viewTempMax ?? calcTempMax());
-    let viewPressMin = $state(saved?.viewPressMin ?? pressureMin);
-    let viewPressMax = $state(saved?.viewPressMax ?? pressureMax);
+    let viewTempMin = getSaved("viewTempMin", tempMin);
+    let viewTempMax = getSaved("viewTempMax", calcTempMax());
+    let viewPressMin = getSaved("viewPressMin", pressureMin);
+    let viewPressMax = getSaved("viewPressMax", pressureMax);
 
     let canvas: HTMLCanvasElement;
     let canvasWidth = $state(1200);
@@ -186,9 +290,9 @@
 
     function scaleX(tempK: number): number {
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, viewTempMin));
-            const logMax = Math.log10(Math.max(10, viewTempMax));
-            const logT = Math.log10(Math.max(10, tempK));
+            const logMin = Math.log10(viewTempMin);
+            const logMax = Math.log10(viewTempMax);
+            const logT = Math.log10(tempK);
             return (
                 margin.left +
                 ((logT - logMin) / (logMax - logMin)) * plotWidth()
@@ -221,8 +325,8 @@
 
     function invScaleX(svgX: number): number {
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, viewTempMin));
-            const logMax = Math.log10(Math.max(10, viewTempMax));
+            const logMin = Math.log10(viewTempMin);
+            const logMax = Math.log10(viewTempMax);
             const ratio = (svgX - margin.left) / plotWidth();
             return Math.pow(10, logMin + ratio * (logMax - logMin));
         }
@@ -557,6 +661,19 @@
         ctx.lineTo(margin.left + plotWidth(), margin.top + plotHeight());
         ctx.stroke();
 
+        // 0 kPa line
+        const zeroY = scaleY(0);
+        if (zeroY >= margin.top && zeroY <= margin.top + plotHeight()) {
+            ctx.strokeStyle = "#ff4444";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([8, 4]);
+            ctx.beginPath();
+            ctx.moveTo(margin.left, zeroY);
+            ctx.lineTo(margin.left + plotWidth(), zeroY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
         // X axis ticks
         const xTicks = logXScale
             ? generateLogTicks(viewTempMin, viewTempMax)
@@ -726,13 +843,13 @@
     function doRescaleX(svgX: number) {
         const dx = svgX - rescaleStartSvgX;
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, rescaleStartTempMin));
-            const logMax = Math.log10(Math.max(10, rescaleStartTempMax));
+            const logMin = Math.log10(rescaleStartTempMin);
+            const logMax = Math.log10(rescaleStartTempMax);
             const logRange = logMax - logMin;
             const dLog = (dx / plotWidth()) * logRange;
             const newLogMin = logMin + dLog;
             const newLogMax = logMax + dLog;
-            viewTempMin = Math.max(10, Math.pow(10, newLogMin));
+            viewTempMin = Math.pow(10, newLogMin);
             viewTempMax = Math.pow(10, newLogMax);
         } else {
             const factor = 1 + dx / plotWidth();
@@ -746,11 +863,11 @@
     function doPan(svgX: number, svgY: number) {
         const dx = (svgX - panStartSvgX) / plotWidth();
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, panStartViewTempMin));
-            const logMax = Math.log10(Math.max(10, panStartViewTempMax));
+            const logMin = Math.log10(panStartViewTempMin);
+            const logMax = Math.log10(panStartViewTempMax);
             const logRange = logMax - logMin;
             const dLog = dx * logRange;
-            viewTempMin = Math.max(10, Math.pow(10, logMin - dLog));
+            viewTempMin = Math.pow(10, logMin - dLog);
             viewTempMax = Math.pow(10, logMax - dLog);
         } else {
             const tempDelta =
@@ -763,23 +880,21 @@
 
         const dy = (svgY - panStartSvgY) / plotHeight();
         const direction = invertPanY ? 1 : -1;
-        const maxPress = logScale ? 10000 : 6500;
 
         if (logScale) {
             const logMin = Math.log10(panStartViewPressMin);
             const logMax = Math.log10(panStartViewPressMax);
             const logRange = logMax - logMin;
             const dLog = dy * logRange * direction;
-            viewPressMin = Math.max(0.01, Math.pow(10, logMin + dLog));
-            viewPressMax = Math.min(maxPress, Math.pow(10, logMax + dLog));
+            viewPressMin = Math.pow(10, logMin + dLog);
+            viewPressMax = Math.pow(10, logMax + dLog);
         } else {
             const pressDelta =
                 dy * (panStartViewPressMax - panStartViewPressMin) * direction;
             const pRange = panStartViewPressMax - panStartViewPressMin;
             let newPressMin = panStartViewPressMin + pressDelta;
-            newPressMin = Math.max(0.01, newPressMin);
             viewPressMin = newPressMin;
-            viewPressMax = Math.min(maxPress, newPressMin + pRange);
+            viewPressMax = newPressMin + pRange;
         }
     }
 
@@ -811,27 +926,21 @@
         return true;
     }
 
-    function doZoom(
-        svgX: number,
-        svgY: number,
-        factor: number,
-        zoomingOut: boolean,
-    ) {
+    function doZoom(svgX: number, svgY: number, factor: number) {
         const tempAtCursor =
             isLocked && lockedTemp !== null ? lockedTemp : invScaleX(svgX);
         const pressAtCursor = invScaleY(svgY);
-        const maxPress = logScale ? 10000 : 6500;
 
         if (logXScale) {
-            const logMin = Math.log10(Math.max(10, viewTempMin));
-            const logMax = Math.log10(Math.max(10, viewTempMax));
-            const logAtCursor = Math.log10(Math.max(10, tempAtCursor));
+            const logMin = Math.log10(viewTempMin);
+            const logMax = Math.log10(viewTempMax);
+            const logAtCursor = Math.log10(tempAtCursor);
             const logRange = logMax - logMin;
             const newLogRange = logRange * factor;
             const offset = logAtCursor - logMin;
             const newLogMin = logAtCursor - offset * factor;
             const newLogMax = newLogMin + newLogRange;
-            viewTempMin = Math.max(10, Math.pow(10, newLogMin));
+            viewTempMin = Math.pow(10, newLogMin);
             viewTempMax = Math.pow(10, newLogMax);
         } else {
             const tempRange = viewTempMax - viewTempMin;
@@ -842,27 +951,46 @@
             viewTempMax = viewTempMin + newTempRange;
         }
 
-        if (zoomingOut && viewPressMax >= maxPress) {
+        if (logScale) {
+            const logMin = Math.log10(viewPressMin);
+            const logMax = Math.log10(viewPressMax);
+            const logAtCursor = Math.log10(pressAtCursor);
+            const logRange = logMax - logMin;
+            const newLogRange = logRange * factor;
+            const offset = logAtCursor - logMin;
+            const newLogMin = logAtCursor - offset * factor;
+            const newLogMax = newLogMin + newLogRange;
+            viewPressMin = Math.pow(10, newLogMin);
+            viewPressMax = Math.pow(10, newLogMax);
         } else {
             const newPressRange = (viewPressMax - viewPressMin) * factor;
             const newPressMin =
                 pressAtCursor - (pressAtCursor - viewPressMin) * factor;
-            viewPressMin = Math.max(0.01, newPressMin);
-            viewPressMax = Math.min(maxPress, viewPressMin + newPressRange);
+            viewPressMin = newPressMin;
+            viewPressMax = viewPressMin + newPressRange;
         }
     }
 
-    function doZoomY(svgY: number, factor: number, zoomingOut: boolean) {
+    function doZoomY(svgY: number, factor: number) {
         const pressAtCursor = invScaleY(svgY);
-        const maxPress = logScale ? 10000 : 6500;
 
-        if (zoomingOut && viewPressMax >= maxPress) {
+        if (logScale) {
+            const logMin = Math.log10(viewPressMin);
+            const logMax = Math.log10(viewPressMax);
+            const logAtCursor = Math.log10(pressAtCursor);
+            const logRange = logMax - logMin;
+            const newLogRange = logRange * factor;
+            const offset = logAtCursor - logMin;
+            const newLogMin = logAtCursor - offset * factor;
+            const newLogMax = newLogMin + newLogRange;
+            viewPressMin = Math.pow(10, newLogMin);
+            viewPressMax = Math.pow(10, newLogMax);
         } else {
             const newPressRange = (viewPressMax - viewPressMin) * factor;
             const newPressMin =
                 pressAtCursor - (pressAtCursor - viewPressMin) * factor;
-            viewPressMin = Math.max(0.01, newPressMin);
-            viewPressMax = Math.min(maxPress, viewPressMin + newPressRange);
+            viewPressMin = newPressMin;
+            viewPressMax = viewPressMin + newPressRange;
         }
     }
 
@@ -1001,16 +1129,6 @@
         isRescalingX = false;
     }
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    function handleTouchStart(event: TouchEvent) {
-        if (event.touches.length === 1) {
-            touchStartX = event.touches[0].clientX;
-            touchStartY = event.touches[0].clientY;
-        }
-    }
-
     function handleTouchMove(event: TouchEvent) {
         if (event.touches.length === 1) {
             const { x: svgX } = getSvgCoords(
@@ -1031,19 +1149,18 @@
         const { x: svgX, y: svgY } = getSvgCoords(event.clientX, event.clientY);
 
         const factor = event.deltaY > 0 ? 1.15 : 1 / 1.15;
-        const zoomingOut = event.deltaY > 0;
 
         if (event.ctrlKey) {
             if (logXScale) {
-                const logMin = Math.log10(Math.max(10, viewTempMin));
-                const logMax = Math.log10(Math.max(10, viewTempMax));
-                const logAtSvgX = Math.log10(Math.max(10, invScaleX(svgX)));
+                const logMin = Math.log10(viewTempMin);
+                const logMax = Math.log10(viewTempMax);
+                const logAtSvgX = Math.log10(invScaleX(svgX));
                 const logRange = logMax - logMin;
                 const newLogRange = logRange * factor;
                 const offset = logAtSvgX - logMin;
                 const newLogMin = logAtSvgX - offset * factor;
                 const newLogMax = newLogMin + newLogRange;
-                viewTempMin = Math.max(10, Math.pow(10, newLogMin));
+                viewTempMin = Math.pow(10, newLogMin);
                 viewTempMax = Math.pow(10, newLogMax);
             } else {
                 const newTempRange = (viewTempMax - viewTempMin) * factor;
@@ -1051,9 +1168,9 @@
                 viewTempMax = viewTempMin + newTempRange;
             }
         } else if (event.shiftKey) {
-            doZoomY(svgY, factor, zoomingOut);
+            doZoomY(svgY, factor);
         } else {
-            doZoom(svgX, svgY, factor, zoomingOut);
+            doZoom(svgX, svgY, factor);
         }
 
         updateLockedPosition();
@@ -1096,6 +1213,46 @@
     let prevLogScale = $state(false);
     let prevLogXScale = $state(false);
     let showHelp = $state(false);
+    let showMiniLegend = $state(loadShowMiniLegend());
+    let shareText = $state("Share");
+    let shareUrl = $state("");
+    let showShareUrl = $state(false);
+    let urlGenerated = $state(false);
+
+    async function copyShare() {
+        saveState();
+        shareUrl = "";
+        setTimeout(() => {
+            saveState();
+            urlGenerated = true;
+            setTimeout(() => (urlGenerated = false), 1500);
+        }, 0);
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            shareText = "Copied!";
+        } catch {
+            showShareUrl = true;
+            return;
+        }
+        setTimeout(function () {
+            shareText = "Share";
+        }, 1500);
+    }
+
+    $effect(() => {
+        if (!shareUrl) {
+            try {
+                const hash = window.location.hash.slice(1);
+                if (hash) {
+                    shareUrl =
+                        window.location.origin +
+                        window.location.pathname +
+                        "#" +
+                        hash;
+                }
+            } catch {}
+        }
+    });
 
     $effect(() => {
         if (prevLogScale && !logScale) {
@@ -1131,6 +1288,12 @@
             document.body.classList.add("dark-mode");
             document.documentElement.classList.add("dark-mode");
         }
+        saveTheme();
+    });
+
+    $effect(() => {
+        void showMiniLegend;
+        saveShowMiniLegend();
     });
 
     $effect(() => {
@@ -1138,6 +1301,31 @@
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
         return () => window.removeEventListener("resize", resizeCanvas);
+    });
+
+    let initLock = $state(false);
+    let initSave = $state(true);
+
+    $effect(() => {
+        if (!canvas || initLock) return;
+        if (saved && saved.isLocked && typeof saved.lockedTemp === "number") {
+            initSave = false;
+            isLocked = true;
+            const temp = saved.lockedTemp as number;
+            lockedTemp = temp;
+            const values: { gasKey: string; value: number }[] = [];
+            for (const [key, gas] of Object.entries(gasData)) {
+                if (!visibleGases[key]) continue;
+                const p = calcPressure(temp, gas, gasTuning[key]);
+                if (p !== null) {
+                    values.push({ gasKey: key, value: p });
+                }
+            }
+            lockedValues = values;
+            updateLockedPosition();
+            drawGraph();
+        }
+        initLock = true;
     });
 
     $effect(() => {
@@ -1152,7 +1340,10 @@
         void viewTempMax;
         void viewPressMin;
         void viewPressMax;
-        saveState();
+        void theme;
+        void isLocked;
+        void lockedTemp;
+        if (initSave) saveState();
     });
 
     $effect(() => {
@@ -1183,30 +1374,58 @@
     </p>
 
     <div class="controls">
-        <label>
-            <input type="checkbox" bind:checked={showGrid} />
-            Grid
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={logScale} />
-            Log Y Scale
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={logXScale} />
-            Log X Scale
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={invertPanY} />
-            Invert Y Pan
-        </label>
-        <button onclick={resetView} class="reset-btn">Reset View</button>
-        <button onclick={resetGases} class="reset-btn"
-            >Reset Gas Selection</button
-        >
-        <button onclick={() => (showHelp = !showHelp)} class="help-btn"
-            >[?]</button
-        >
+        <div class="control-row">
+            <label>
+                <input type="checkbox" bind:checked={showGrid} />
+                Grid
+            </label>
+            <label>
+                <input type="checkbox" bind:checked={logScale} />
+                Log Y Scale
+            </label>
+            <label>
+                <input type="checkbox" bind:checked={logXScale} />
+                Log X Scale
+            </label>
+            <label>
+                <input type="checkbox" bind:checked={invertPanY} />
+                Invert Y Pan
+            </label>
+        </div>
+        <div class="control-row">
+            <button onclick={resetView} class="btn">Reset View</button>
+            <button onclick={resetGases} class="btn">Reset Gas Selection</button
+            >
+            <button onclick={copyShare} class="btn">{shareText}</button>
+            <button
+                onclick={() => (showMiniLegend = !showMiniLegend)}
+                class="btn">Legend</button
+            >
+            <button onclick={() => (showHelp = !showHelp)} class="btn"
+                >[?]</button
+            >
+        </div>
     </div>
+
+    {#if showShareUrl}
+        <div class="share-row">
+            <input
+                type="text"
+                readonly
+                value={shareUrl}
+                class="share-url"
+                class:share-url-glow={urlGenerated}
+                onclick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <button
+                onclick={() => {
+                    showShareUrl = false;
+                    shareText = "Share";
+                }}
+                class="share-close">×</button
+            >
+        </div>
+    {/if}
 
     {#if showHelp}
         <div class="help-tooltip">
@@ -1245,11 +1464,37 @@
                 <li>
                     <strong>Click column headers</strong> — Sort the legend table
                 </li>
+                <li>
+                    <strong>Legend button</strong> — Show/hide mini legend on chart
+                </li>
+                <li>
+                    <strong>Share button</strong> — Copy shareable URL to clipboard
+                </li>
             </ul>
         </div>
     {/if}
 
     <div class="chart-wrapper">
+        {#if showMiniLegend}
+            <div class="mini-legend">
+                {#each Object.entries(gasData) as [key, gas] (key)}
+                    <div
+                        class="mini-legend-item"
+                        class:hidden={!visibleGases[key]}
+                        onclick={() => (visibleGases[key] = !visibleGases[key])}
+                        onkeydown={(e) => {
+                            if (e.key === "Enter" || e.key === " ")
+                                visibleGases[key] = !visibleGases[key];
+                        }}
+                        role="button"
+                        tabindex="0"
+                        title={gas.name}
+                    >
+                        <img src={gasIcons[key]} alt={gas.symbol} />
+                    </div>
+                {/each}
+            </div>
+        {/if}
         <canvas
             bind:this={canvas}
             onmousemove={handleMouseMove}
@@ -1258,7 +1503,6 @@
             onmousedown={handleMouseDown}
             onmouseup={handleMouseUp}
             onmouseenter={handleCanvasMouseOver}
-            ontouchstart={handleTouchStart}
             ontouchmove={handleTouchMove}
             class:panning={isPanning}
             class:rescale-y={isRescalingY}

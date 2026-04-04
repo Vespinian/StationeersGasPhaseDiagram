@@ -63,7 +63,8 @@ h2 {
 
 .controls {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 10px;
     margin-bottom: 20px;
     justify-content: center;
     background: #1e2a3d;
@@ -74,6 +75,12 @@ h2 {
     margin-right: auto;
 }
 
+.control-row {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
 .light-mode .controls {
     background: #f2f2f2;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -81,6 +88,66 @@ h2 {
 
 .dark-mode .controls {
     background: #111;
+}
+
+.share-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.share-url {
+    width: 80%;
+    max-width: 600px;
+    padding: 8px 12px;
+    border: 1px solid rgba(100, 140, 200, 0.2);
+    border-radius: 4px;
+    background: #1e2a3d;
+    color: #b8c8e0;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+.share-url-glow {
+    animation: inputGlow 1.5s ease-out;
+}
+
+@keyframes inputGlow {
+    0% {
+        box-shadow: 0 0 15px rgba(100, 180, 255, 0.8);
+        border-color: rgba(100, 180, 255, 0.8);
+    }
+    100% {
+        box-shadow: none;
+        border-color: rgba(100, 140, 200, 0.2);
+    }
+}
+
+.share-close {
+    background: transparent;
+    border: none;
+    color: #b8c8e0;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.share-close:hover {
+    color: #fff;
+}
+
+.light-mode .share-url {
+    background: #f2f2f2;
+    color: #202122;
+    border-color: #a2a9b1;
+}
+
+.dark-mode .share-url {
+    background: #111;
+    color: #ccc;
+    border-color: #444;
 }
 
 .controls label {
@@ -124,7 +191,7 @@ h2 {
     background: #333;
 }
 
-.reset-btn {
+.btn {
     background: #25334a;
     color: #b8c8e0;
     border: 1px solid rgba(100, 140, 200, 0.2);
@@ -134,62 +201,27 @@ h2 {
     font-size: 13px;
 }
 
-.light-mode .reset-btn {
+.light-mode .btn {
     background: #fff;
     color: #202122;
     border-color: #a2a9b1;
 }
 
-.dark-mode .reset-btn {
+.dark-mode .btn {
     background: #222;
     color: #ccc;
     border-color: #444;
 }
 
-.reset-btn:hover {
+.btn:hover {
     background: #2e4060;
 }
 
-.light-mode .reset-btn:hover {
+.light-mode .btn:hover {
     background: #e8e8e8;
 }
 
-.dark-mode .reset-btn:hover {
-    background: #333;
-}
-
-.help-btn {
-    background: #25334a;
-    color: #b8c8e0;
-    border: 1px solid rgba(100, 140, 200, 0.2);
-    padding: 4px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: bold;
-}
-
-.light-mode .help-btn {
-    background: #fff;
-    color: #202122;
-    border-color: #a2a9b1;
-}
-
-.dark-mode .help-btn {
-    background: #222;
-    color: #ccc;
-    border-color: #444;
-}
-
-.help-btn:hover {
-    background: #2e4060;
-}
-
-.light-mode .help-btn:hover {
-    background: #e8e8e8;
-}
-
-.dark-mode .help-btn:hover {
+.dark-mode .btn:hover {
     background: #333;
 }
 
@@ -229,6 +261,56 @@ h2 {
     margin: 0 auto;
     padding: 0 12px;
     box-sizing: border-box;
+}
+
+.mini-legend {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 156px;
+    z-index: 10;
+    background: rgba(30, 42, 61, 0.9);
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(100, 140, 200, 0.3);
+}
+
+.mini-legend-item {
+    width: 32px;
+    height: 32px;
+    padding: 2px;
+    cursor: pointer;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.mini-legend-item:hover {
+    opacity: 0.5;
+}
+
+.mini-legend-item img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.mini-legend-item.hidden {
+    opacity: 0.3;
+}
+
+.mini-legend-item.hidden:hover {
+    opacity: 0.6;
+}
+
+.light-mode .mini-legend {
+    background: rgba(242, 242, 242, 0.95);
+    border-color: rgba(162, 169, 177, 0.5);
 }
 
 @media (min-width: 768px) {
@@ -413,32 +495,6 @@ h2 {
 .lock-icon {
     margin-left: 6px;
     font-size: 11px;
-}
-
-.help-btn {
-    background: #25334a;
-    color: #b8c8e0;
-    border: 1px solid rgba(100, 140, 200, 0.2);
-    padding: 4px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: bold;
-}
-
-.light-mode .help-btn {
-    background: #e0e0e0;
-    color: #202122;
-    border-color: #a2a9b1;
-}
-
-.help-btn:hover {
-    background: #2e4060;
-    border-color: rgba(100, 140, 200, 0.3);
-}
-
-.light-mode .help-btn:hover {
-    background: #d0d0d0;
 }
 
 .help-tooltip {
