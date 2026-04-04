@@ -1651,7 +1651,7 @@
     <div class="chart-wrapper">
         {#if showMiniLegend}
             <div class="mini-legend">
-                {#each Object.entries(gasData) as [key, gas] (key)}
+                {#each sortedGases as [key, gas] (key)}
                     <div
                         class="mini-legend-item"
                         class:hidden={!visibleGases[key]}
