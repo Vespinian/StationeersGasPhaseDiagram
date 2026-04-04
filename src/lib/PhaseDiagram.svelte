@@ -1578,7 +1578,7 @@
             <button onclick={copyShare} class="btn">{shareText}</button>
             <button
                 onclick={() => (showMiniLegend = !showMiniLegend)}
-                class="btn">Legend</button
+                class="btn">{showMiniLegend ? "Hide" : "Show"} Legend</button
             >
             <button onclick={() => (showHelp = !showHelp)} class="btn"
                 >[?]</button
