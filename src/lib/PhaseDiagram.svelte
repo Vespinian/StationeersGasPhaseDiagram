@@ -1145,6 +1145,7 @@
     let prevLogScale = $state(false);
     let prevLogXScale = $state(false);
     let showHelp = $state(false);
+    let showMiniLegend = $state(false);
     let shareText = $state("Share");
     let shareUrl = $state("");
     let showShareUrl = $state(false);
@@ -1317,6 +1318,9 @@
         <button onclick={copyShare} class="reset-btn"
             >{shareText}</button
         >
+        <button onclick={() => (showMiniLegend = !showMiniLegend)} class="help-btn"
+            >Legend</button
+        >
         <button onclick={() => (showHelp = !showHelp)} class="help-btn"
             >[?]</button
         >
@@ -1378,6 +1382,20 @@
     {/if}
 
     <div class="chart-wrapper">
+        {#if showMiniLegend}
+            <div class="mini-legend">
+                {#each Object.entries(gasData) as [key, gas] (key)}
+                    <div 
+                        class="mini-legend-item"
+                        class:hidden={!visibleGases[key]}
+                        onclick={() => visibleGases[key] = !visibleGases[key]}
+                        title={gas.name}
+                    >
+                        <img src={gasIcons[key]} alt={gas.symbol} />
+                    </div>
+                {/each}
+            </div>
+        {/if}
         <canvas
             bind:this={canvas}
             onmousemove={handleMouseMove}

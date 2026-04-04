@@ -301,6 +301,55 @@ h2 {
     box-sizing: border-box;
 }
 
+.mini-legend {
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 150px;
+    z-index: 10;
+    background: rgba(30, 42, 61, 0.9);
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(100, 140, 200, 0.3);
+}
+
+.mini-legend-item {
+    width: 32px;
+    height: 32;
+    cursor: pointer;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.mini-legend-item:hover {
+    opacity: 0.5;
+}
+
+.mini-legend-item img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.mini-legend-item.hidden {
+    opacity: 0.3;
+}
+
+.mini-legend-item.hidden:hover {
+    opacity: 0.6;
+}
+
+.light-mode .mini-legend {
+    background: rgba(242, 242, 242, 0.95);
+    border-color: rgba(162, 169, 177, 0.5);
+}
+
 @media (min-width: 768px) {
     .chart-wrapper {
         padding: 0;
