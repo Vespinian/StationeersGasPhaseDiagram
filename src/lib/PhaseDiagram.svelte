@@ -361,6 +361,25 @@
     const tempLogMax = $derived.by(() => (visibleGases["NaCl"] ? 5000 : 1000));
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
+    const themeColors = $derived(getThemeColors());
+
+    const cachedGasColors = $derived.by(() => {
+        const colors: Record<string, { color: string; labelColor: string }> = {};
+        for (const [key, gas] of Object.entries(gasData)) {
+            colors[key] = {
+                color: getGasColor(gas),
+                labelColor: getGasLabelColor(gas),
+            };
+        }
+        return colors;
+    });
+
+    // View state in data coordinates
+    let viewTempMin = getSaved("viewTempMin", calcTempMin());
+    let viewTempMax = getSaved("viewTempMax", calcTempMax());
+    let viewPressMin = getSaved("viewPressMin", 0);
+    let viewPressMax = getSaved("viewPressMax", 6000);
+
     function isDefaultView(
         vTempMin: number,
         vTempMax: number,
@@ -378,12 +397,6 @@
             vPressMax === expectedPressMax
         );
     }
-
-    // View state in data coordinates
-    let viewTempMin = getSaved("viewTempMin", calcTempMin());
-    let viewTempMax = getSaved("viewTempMax", calcTempMax());
-    let viewPressMin = getSaved("viewPressMin", 0);
-    let viewPressMax = getSaved("viewPressMax", 6000);
 
     let canvas: HTMLCanvasElement;
     let canvasWidth = $state(1200);
@@ -619,7 +632,14 @@
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
-        const t = getThemeColors();
+        const t = themeColors;
+
+        const xTicks = logXScale
+            ? generateLogTicks(viewTempMin, viewTempMax)
+            : generateTicks(viewTempMin, viewTempMax);
+        const yTicks = logScale
+            ? generateLogTicks(viewPressMin, viewPressMax)
+            : generateTicks(viewPressMin, viewPressMax);
 
         ctx.save();
         ctx.scale(dpr, dpr);
@@ -641,13 +661,6 @@
 
         // Grid
         if (showGrid) {
-            const xTicks = logXScale
-                ? generateLogTicks(viewTempMin, viewTempMax)
-                : generateTicks(viewTempMin, viewTempMax);
-            const yTicks = logScale
-                ? generateLogTicks(viewPressMin, viewPressMax)
-                : generateTicks(viewPressMin, viewPressMax);
-
             ctx.strokeStyle = t.grid;
             ctx.setLineDash([3, 3]);
             ctx.lineWidth = 1;
@@ -714,8 +727,9 @@
         for (const [key, gas] of Object.entries(gasData)) {
             if (!visibleGases[key]) continue;
             const tuning = gasTuning[key];
+            const colors = cachedGasColors[key];
 
-            ctx.strokeStyle = getGasColor(gas);
+            ctx.strokeStyle = colors.color;
             ctx.lineWidth = 3;
             ctx.beginPath();
             let started = false;
@@ -761,7 +775,7 @@
                 ) {
                     const x = scaleX(t);
                     const y = scaleY(curr);
-                    ctx.fillStyle = getGasColor(gas);
+                    ctx.fillStyle = colors.color;
                     ctx.beginPath();
                     ctx.arc(x, y, 5, 0, Math.PI * 2);
                     ctx.fill();
@@ -835,9 +849,6 @@
         }
 
         // X axis ticks
-        const xTicks = logXScale
-            ? generateLogTicks(viewTempMin, viewTempMax)
-            : generateTicks(viewTempMin, viewTempMax);
         ctx.fillStyle = t.tickText;
         ctx.font = "14px sans-serif";
         ctx.textAlign = "center";
@@ -855,9 +866,6 @@
         }
 
         // Y axis ticks
-        const yTicks = logScale
-            ? generateLogTicks(viewPressMin, viewPressMax)
-            : generateTicks(viewPressMin, viewPressMax);
         ctx.fillStyle = t.tickText;
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
@@ -1215,11 +1223,8 @@
             return;
         }
 
-        if (!doHover(svgX)) {
-            drawGraph();
-        } else {
-            drawGraph();
-        }
+        doHover(svgX);
+        drawGraph();
     }
 
     function handleMouseLeave() {
