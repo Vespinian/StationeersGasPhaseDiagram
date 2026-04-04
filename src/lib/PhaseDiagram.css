@@ -308,6 +308,10 @@ h2 {
     opacity: 0.6;
 }
 
+.dark-mode .mini-legend {
+    background: rgba(50, 50, 50, 0.95);
+}
+
 .light-mode .mini-legend {
     background: rgba(242, 242, 242, 0.95);
     border-color: rgba(162, 169, 177, 0.5);
