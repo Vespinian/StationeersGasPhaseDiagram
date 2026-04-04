@@ -340,6 +340,28 @@
     const tempMin = $derived.by(() => calcTempMin());
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
+    function isDefaultView(
+        vTempMin: number,
+        vTempMax: number,
+        vPressMin: number,
+        vPressMax: number,
+    ): boolean {
+        const expectedTempMin = logXScale ? 10 : tempMin;
+        const expectedTempMax = logXScale
+            ? visibleGases["NaCl"]
+                ? 5000
+                : 1000
+            : tempMax;
+        const expectedPressMin = logScale ? 5 : 0;
+        const expectedPressMax = logScale ? 10000 : 6000;
+        return (
+            vTempMin === expectedTempMin &&
+            vTempMax === expectedTempMax &&
+            vPressMin === expectedPressMin &&
+            vPressMax === expectedPressMax
+        );
+    }
+
     // View state in data coordinates
     let viewTempMin = getSaved("viewTempMin", calcTempMin());
     let viewTempMax = getSaved("viewTempMax", calcTempMax());
@@ -1020,6 +1042,7 @@
 
         panPrevSvgY = svgY;
         panPrevSvgX = svgX;
+        graphMoved = true;
     }
 
     function doHover(svgX: number) {
@@ -1102,6 +1125,29 @@
                 viewPressMin + newPressRange,
             );
         }
+        graphMoved = true;
+    }
+
+    function doZoomX(svgX: number, factor: number) {
+        const tempAtCursor = invScaleX(svgX);
+
+        if (logXScale) {
+            const logMin = Math.log10(viewTempMin);
+            const logMax = Math.log10(viewTempMax);
+            const logAtCursor = Math.log10(tempAtCursor);
+            const logRange = logMax - logMin;
+            const newLogRange = logRange * factor;
+            const offset = logAtCursor - logMin;
+            const newLogMin = logAtCursor - offset * factor;
+            const newLogMax = newLogMin + newLogRange;
+            viewTempMin = Math.pow(10, newLogMin);
+            viewTempMax = Math.pow(10, newLogMax);
+        } else {
+            const newTempRange = (viewTempMax - viewTempMin) * factor;
+            viewTempMin = svgX - (svgX - viewTempMin) * factor;
+            viewTempMax = viewTempMin + newTempRange;
+        }
+        graphMoved = true;
     }
 
     function doZoomY(svgY: number, factor: number) {
@@ -1134,6 +1180,7 @@
                 viewPressMin + newPressRange,
             );
         }
+        graphMoved = true;
     }
 
     function handleMouseMove(event: MouseEvent) {
@@ -1188,6 +1235,14 @@
     let isPanning = $state(false);
     let panPrevSvgX = $state(0);
     let panPrevSvgY = $state(0);
+    let graphMoved = $state(
+        !isDefaultView(
+            saved?.viewTempMin ?? calcTempMin(),
+            saved?.viewTempMax ?? calcTempMax(),
+            saved?.viewPressMin ?? 0,
+            saved?.viewPressMax ?? 6000,
+        ),
+    );
 
     function startInteraction(svgX: number, svgY: number) {
         isPanning = true;
@@ -1232,22 +1287,7 @@
         const factor = event.deltaY > 0 ? 1.15 : 1 / 1.15;
 
         if (event.ctrlKey) {
-            if (logXScale) {
-                const logMin = Math.log10(viewTempMin);
-                const logMax = Math.log10(viewTempMax);
-                const logAtSvgX = Math.log10(invScaleX(svgX));
-                const logRange = logMax - logMin;
-                const newLogRange = logRange * factor;
-                const offset = logAtSvgX - logMin;
-                const newLogMin = logAtSvgX - offset * factor;
-                const newLogMax = newLogMin + newLogRange;
-                viewTempMin = Math.pow(10, newLogMin);
-                viewTempMax = Math.pow(10, newLogMax);
-            } else {
-                const newTempRange = (viewTempMax - viewTempMin) * factor;
-                viewTempMin = svgX - (svgX - viewTempMin) * factor;
-                viewTempMax = viewTempMin + newTempRange;
-            }
+            doZoomX(svgX, factor);
         } else if (event.shiftKey) {
             doZoomY(svgY, factor);
         } else {
@@ -1272,12 +1312,16 @@
             viewPressMin = 0;
         }
         viewPressMax = logScale ? 10000 : 6000;
+        graphMoved = false;
         updateLockedPosition();
         drawGraph();
     }
 
     function toggleGas(gasKey: string) {
         visibleGases = { ...visibleGases, [gasKey]: !visibleGases[gasKey] };
+        if (!graphMoved) {
+            resetView();
+        }
         updateLockedPosition();
     }
 
@@ -1303,7 +1347,7 @@
     });
 
     let prevLogScale = $state(false);
-    let prevLogXScale = $state(false);
+    let prevLogXScale = $state(logXScale);
     let showHelp = $state(false);
     let showMiniLegend = $state(loadShowMiniLegend());
     let shareText = $state("Share");
@@ -1366,6 +1410,9 @@
             viewTempMax = visibleGases["NaCl"] ? 5000 : 1000;
         }
         prevLogXScale = logXScale;
+        if (isLocked && lockedTemp !== null) {
+            lockedX = scaleX(lockedTemp);
+        }
         drawGraph();
     });
 
@@ -1569,10 +1616,10 @@
                     <div
                         class="mini-legend-item"
                         class:hidden={!visibleGases[key]}
-                        onclick={() => (visibleGases[key] = !visibleGases[key])}
+                        onclick={() => toggleGas(key)}
                         onkeydown={(e) => {
                             if (e.key === "Enter" || e.key === " ")
-                                visibleGases[key] = !visibleGases[key];
+                                toggleGas(key);
                         }}
                         role="button"
                         tabindex="0"
