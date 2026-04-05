@@ -372,7 +372,7 @@
 
     const themeColors = $derived(getThemeColors());
 
-    const cachedGasColors = $derived.by(() => {
+    const gasColors = $derived.by(() => {
         const colors: Record<string, { color: string; labelColor: string }> =
             {};
         for (const [key, gas] of Object.entries(gasData)) {
@@ -564,7 +564,7 @@
     function getGasLabelColor(gas: GasData): string {
         if (gas.symbol === "N₂") {
             if (theme === "dark") return "#888888";
-            if (theme === "light") return "#000000";
+            if (theme === "light") return "#101010";
             return "#999999";
         }
         if (gas.symbol === "O₂") {
@@ -735,60 +735,50 @@
 
         // Gas curves
         for (const [key, gas] of Object.entries(gasData)) {
-            if (!visibleGases[key]) continue;
+            if (!visibleGases[key] || key === "He") continue;
             const tuning = gasTuning[key];
-            const colors = cachedGasColors[key];
+            const color = gasColors[key];
 
-            ctx.strokeStyle = colors.color;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
             let started = false;
-
             for (
-                let t = Math.max(0, Math.ceil(viewTempMin));
-                t <=
-                Math.min(
-                    logXScale ? tempLogMax : tempMax,
-                    Math.ceil(viewTempMax),
-                );
+                let t = Math.max(Math.ceil(gas.meltK), Math.ceil(viewTempMin));
+                t <= Math.min(Math.ceil(gas.maxLiqK), Math.ceil(viewTempMax));
                 t += 1
             ) {
                 const p = calcPressure(t, gas, tuning);
                 if (p === null) {
                     started = false;
-                    continue;
+                    const x = scaleX(gas.maxLiqK);
+                    const y = scaleY(gas.maxKPa);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    ctx.fillStyle = color.color;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
                 }
                 const x = scaleX(t);
                 const y = scaleY(p);
                 if (!started) {
+                    ctx.fillStyle = color.color;
+                    if (t === Math.ceil(gas.meltK)) {
+                        ctx.beginPath();
+                        ctx.arc(x, y, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.strokeStyle = color.color;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
                     ctx.moveTo(x, y);
                     started = true;
+                    continue;
                 } else {
                     ctx.lineTo(x, y);
-                }
-            }
-            ctx.stroke();
-
-            // Endpoint dots
-            for (
-                let t = Math.max(0, Math.floor(viewTempMin));
-                t <= Math.min(tempMax, Math.ceil(viewTempMax));
-                t += 1
-            ) {
-                const curr = calcPressure(t, gas, tuning);
-                if (curr === null) continue;
-                const prev = calcPressure(t - 1, gas, tuning);
-                const next = calcPressure(t + 1, gas, tuning);
-                if (
-                    (prev === null && next !== null) ||
-                    (prev !== null && next === null)
-                ) {
-                    const x = scaleX(t);
-                    const y = scaleY(curr);
-                    ctx.fillStyle = colors.color;
-                    ctx.beginPath();
-                    ctx.arc(x, y, 5, 0, Math.PI * 2);
-                    ctx.fill();
+                    if (t === Math.ceil(viewTempMax)) {
+                        started = false;
+                        ctx.stroke();
+                    }
                 }
             }
         }
@@ -810,7 +800,6 @@
 
             // Horizontal lines and dots
             for (const { gasKey, value } of displayValues) {
-                const g = gasData[gasKey];
                 const y = scaleY(value);
 
                 ctx.strokeStyle = t.hoverLineH;
@@ -821,7 +810,7 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                ctx.fillStyle = getGasLabelColor(g);
+                ctx.fillStyle = gasColors[gasKey]?.labelColor;
                 ctx.strokeStyle = t.hoverDotStroke;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -981,7 +970,7 @@
 
             const values: { gasKey: string; value: number }[] = [];
             for (const [key, gas] of Object.entries(gasData)) {
-                if (!visibleGases[key]) continue;
+                if (!visibleGases[key] || key === "He") continue;
                 const p = calcPressure(rounded, gas, gasTuning[key]);
                 if (p !== null) {
                     values.push({ gasKey: key, value: p });
@@ -1009,12 +998,6 @@
     function doPan(svgX: number, svgY: number) {
         const dx = ((svgX - panPrevSvgX) / plotWidth()) * -1;
         if (logXScale) {
-            // const logMin = Math.log10(qanStartViewTempMin);
-            // const logMax = Math.log10(panStartViewTempMax);
-            // const logRange = logMax - logMin;
-            // const dLog = dx * logRange;
-            // viewTempMin = Math.max(HARD_TEMP_MIN, Math.pow(10, logMin - dLog));
-            // viewTempMax = Math.min(HARD_TEMP_MAX, Math.pow(10, logMax - dLog));
             const logMin = Math.log10(viewTempMin);
             const logMax = Math.log10(viewTempMax);
             const wantedDelta = (logMax - logMin) * dx;
@@ -1023,7 +1006,6 @@
                 viewTempMax = HARD_LOG_TEMP_MAX;
             } else if (Math.pow(10, logMin + wantedDelta) < HARD_LOG_TEMP_MIN) {
                 viewTempMin = HARD_LOG_TEMP_MIN;
-                HARD_LOG_TEMP_MIN + Math.pow(10, logMax - logMin);
             } else {
                 viewTempMin = Math.pow(10, logMin + wantedDelta);
                 viewTempMax = Math.pow(10, logMax + wantedDelta);
@@ -1057,7 +1039,6 @@
                 Math.pow(10, logMin + wantedDelta) < HARD_LOG_PRESSURE_MIN
             ) {
                 viewPressMin = HARD_LOG_PRESSURE_MIN;
-                HARD_LOG_PRESSURE_MIN + Math.pow(10, logMax - logMin);
             } else {
                 viewPressMin = Math.pow(10, logMin + wantedDelta);
                 viewPressMax = Math.pow(10, logMax + wantedDelta);
@@ -1100,7 +1081,7 @@
 
         const values: { gasKey: string; value: number }[] = [];
         for (const [key, gas] of Object.entries(gasData)) {
-            if (!visibleGases[key]) continue;
+            if (!visibleGases[key] || key == "He") continue;
             const p = calcPressure(rounded, gas, gasTuning[key]);
             if (p !== null) {
                 values.push({ gasKey: key, value: p });
