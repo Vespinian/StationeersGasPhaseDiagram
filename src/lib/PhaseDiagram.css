@@ -416,17 +416,17 @@ h2 {
     text-align: left;
     padding: 8px 12px;
     border-bottom: 2px solid rgba(100, 140, 200, 0.2);
-    color: #7a8fa8;
     font-weight: 600;
 }
 
 .legend thead th.sortable {
     cursor: pointer;
     user-select: none;
+    color: #b8c8e0;
 }
 
 .legend thead th.sortable:hover {
-    color: #b8c8e0;
+    color: #e0e0ff;
 }
 
 .light-mode .legend thead th {
@@ -466,10 +466,6 @@ h2 {
 
 .legend .symbol {
     font-weight: 600;
-}
-
-.legend .name {
-    color: #7a8fa8;
 }
 
 .light-mode .legend .name {
