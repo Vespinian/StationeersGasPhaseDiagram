@@ -372,7 +372,7 @@
 
     const themeColors = $derived(getThemeColors());
 
-    const cachedGasColors = $derived.by(() => {
+    const gasColors = $derived.by(() => {
         const colors: Record<string, { color: string; labelColor: string }> =
             {};
         for (const [key, gas] of Object.entries(gasData)) {
@@ -564,7 +564,7 @@
     function getGasLabelColor(gas: GasData): string {
         if (gas.symbol === "N₂") {
             if (theme === "dark") return "#888888";
-            if (theme === "light") return "#000000";
+            if (theme === "light") return "#101010";
             return "#999999";
         }
         if (gas.symbol === "O₂") {
@@ -735,8 +735,9 @@
 
         // Gas curves
         for (const [key, gas] of Object.entries(gasData)) {
-            if (!visibleGases[key]) continue;
+            if (!visibleGases[key] || key == "He") continue;
             const tuning = gasTuning[key];
+            const color = gasColors[key];
 
             let started = false;
             for (
@@ -751,7 +752,7 @@
                     const y = scaleY(gas.maxKPa);
                     ctx.lineTo(x, y);
                     ctx.stroke();
-                    ctx.fillStyle = getGasColor(gas);
+                    ctx.fillStyle = color.color;
                     ctx.beginPath();
                     ctx.arc(x, y, 5, 0, Math.PI * 2);
                     ctx.fill();
@@ -760,13 +761,13 @@
                 const x = scaleX(t);
                 const y = scaleY(p);
                 if (!started) {
-                    ctx.fillStyle = getGasColor(gas);
+                    ctx.fillStyle = color.color;
                     if (t === Math.ceil(gas.meltK)) {
                         ctx.beginPath();
                         ctx.arc(x, y, 5, 0, Math.PI * 2);
                         ctx.fill();
                     }
-                    ctx.strokeStyle = getGasColor(gas);
+                    ctx.strokeStyle = color.color;
                     ctx.lineWidth = 3;
                     ctx.beginPath();
                     ctx.moveTo(x, y);
@@ -799,7 +800,6 @@
 
             // Horizontal lines and dots
             for (const { gasKey, value } of displayValues) {
-                const g = gasData[gasKey];
                 const y = scaleY(value);
 
                 ctx.strokeStyle = t.hoverLineH;
@@ -810,7 +810,7 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                ctx.fillStyle = getGasLabelColor(g);
+                ctx.fillStyle = gasColors[gasKey].labelColor;
                 ctx.strokeStyle = t.hoverDotStroke;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -1012,7 +1012,6 @@
                 viewTempMax = HARD_LOG_TEMP_MAX;
             } else if (Math.pow(10, logMin + wantedDelta) < HARD_LOG_TEMP_MIN) {
                 viewTempMin = HARD_LOG_TEMP_MIN;
-                HARD_LOG_TEMP_MIN + Math.pow(10, logMax - logMin);
             } else {
                 viewTempMin = Math.pow(10, logMin + wantedDelta);
                 viewTempMax = Math.pow(10, logMax + wantedDelta);
@@ -1046,7 +1045,6 @@
                 Math.pow(10, logMin + wantedDelta) < HARD_LOG_PRESSURE_MIN
             ) {
                 viewPressMin = HARD_LOG_PRESSURE_MIN;
-                HARD_LOG_PRESSURE_MIN + Math.pow(10, logMax - logMin);
             } else {
                 viewPressMin = Math.pow(10, logMin + wantedDelta);
                 viewPressMax = Math.pow(10, logMax + wantedDelta);
