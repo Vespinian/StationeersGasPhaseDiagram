@@ -735,7 +735,7 @@
 
         // Gas curves
         for (const [key, gas] of Object.entries(gasData)) {
-            if (!visibleGases[key] || key == "He") continue;
+            if (!visibleGases[key] || key === "He") continue;
             const tuning = gasTuning[key];
             const color = gasColors[key];
 
@@ -810,7 +810,7 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                ctx.fillStyle = gasColors[gasKey].labelColor;
+                ctx.fillStyle = gasColors[gasKey]?.labelColor;
                 ctx.strokeStyle = t.hoverDotStroke;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -970,7 +970,7 @@
 
             const values: { gasKey: string; value: number }[] = [];
             for (const [key, gas] of Object.entries(gasData)) {
-                if (!visibleGases[key]) continue;
+                if (!visibleGases[key] || key === "He") continue;
                 const p = calcPressure(rounded, gas, gasTuning[key]);
                 if (p !== null) {
                     values.push({ gasKey: key, value: p });
@@ -1087,7 +1087,7 @@
 
         const values: { gasKey: string; value: number }[] = [];
         for (const [key, gas] of Object.entries(gasData)) {
-            if (!visibleGases[key]) continue;
+            if (!visibleGases[key] || key == "He") continue;
             const p = calcPressure(rounded, gas, gasTuning[key]);
             if (p !== null) {
                 values.push({ gasKey: key, value: p });
