@@ -998,12 +998,6 @@
     function doPan(svgX: number, svgY: number) {
         const dx = ((svgX - panPrevSvgX) / plotWidth()) * -1;
         if (logXScale) {
-            // const logMin = Math.log10(qanStartViewTempMin);
-            // const logMax = Math.log10(panStartViewTempMax);
-            // const logRange = logMax - logMin;
-            // const dLog = dx * logRange;
-            // viewTempMin = Math.max(HARD_TEMP_MIN, Math.pow(10, logMin - dLog));
-            // viewTempMax = Math.min(HARD_TEMP_MAX, Math.pow(10, logMax - dLog));
             const logMin = Math.log10(viewTempMin);
             const logMax = Math.log10(viewTempMax);
             const wantedDelta = (logMax - logMin) * dx;
