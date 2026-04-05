@@ -312,11 +312,9 @@ h2 {
     align-items: center;
     justify-content: center;
     transition: opacity 0.2s;
+    touch-action: manipulation;
 }
 
-.mini-legend-item:hover {
-    opacity: 0.5;
-}
 
 .mini-legend-item img {
     width: 36px;
@@ -328,8 +326,14 @@ h2 {
     opacity: 0.3;
 }
 
-.mini-legend-item.hidden:hover {
-    opacity: 0.6;
+@media (hover:hover) {
+    .mini-legend-item:hover {
+        opacity: 0.5;
+    }
+
+    .mini-legend-item.hidden:hover {
+        opacity: 0.6;
+    }
 }
 
 .dark-mode .mini-legend {
