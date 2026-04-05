@@ -737,58 +737,45 @@
         for (const [key, gas] of Object.entries(gasData)) {
             if (!visibleGases[key]) continue;
             const tuning = gasTuning[key];
-            const colors = cachedGasColors[key];
 
-            ctx.strokeStyle = colors.color;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
             let started = false;
-
             for (
-                let t = Math.max(0, Math.ceil(viewTempMin));
-                t <=
-                Math.min(
-                    logXScale ? tempLogMax : tempMax,
-                    Math.ceil(viewTempMax),
-                );
+                let t = Math.max(Math.ceil(gas.meltK), Math.ceil(viewTempMin));
+                t <= Math.min(Math.ceil(gas.maxLiqK), Math.ceil(viewTempMax));
                 t += 1
             ) {
                 const p = calcPressure(t, gas, tuning);
+                const x = scaleX(t);
                 if (p === null) {
                     started = false;
-                    continue;
-                }
-                const x = scaleX(t);
-                const y = scaleY(p);
-                if (!started) {
-                    ctx.moveTo(x, y);
-                    started = true;
-                } else {
+                    const y = scaleY(gas.maxKPa);
                     ctx.lineTo(x, y);
-                }
-            }
-            ctx.stroke();
-
-            // Endpoint dots
-            for (
-                let t = Math.max(0, Math.floor(viewTempMin));
-                t <= Math.min(tempMax, Math.ceil(viewTempMax));
-                t += 1
-            ) {
-                const curr = calcPressure(t, gas, tuning);
-                if (curr === null) continue;
-                const prev = calcPressure(t - 1, gas, tuning);
-                const next = calcPressure(t + 1, gas, tuning);
-                if (
-                    (prev === null && next !== null) ||
-                    (prev !== null && next === null)
-                ) {
-                    const x = scaleX(t);
-                    const y = scaleY(curr);
-                    ctx.fillStyle = colors.color;
+                    ctx.stroke();
+                    ctx.fillStyle = getGasColor(gas);
                     ctx.beginPath();
                     ctx.arc(x, y, 5, 0, Math.PI * 2);
                     ctx.fill();
+                    break;
+                }
+                const y = scaleY(p);
+                if (!started) {
+                    ctx.fillStyle = getGasColor(gas);
+                    if (t === Math.ceil(gas.meltK)) {
+                        ctx.beginPath();
+                        ctx.arc(x, y, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.strokeStyle = getGasColor(gas);
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    started = true;
+                    continue;
+                } else {
+                    ctx.lineTo(x, y);
+                    if (t === Math.ceil(viewTempMax)) {
+                        ctx.stroke();
+                    }
                 }
             }
         }
