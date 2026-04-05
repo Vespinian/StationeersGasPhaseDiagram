@@ -92,16 +92,16 @@
 
     let graphMoved = $state(
         !isDefaultView(
-            saved?.viewTempMin ?? calcTempMin(visibleGases),
-            saved?.viewTempMax ?? calcTempMax(visibleGases),
+            saved?.viewTempMin ?? untrack(() => calcTempMin(visibleGases)),
+            saved?.viewTempMax ?? untrack(() => calcTempMax(visibleGases)),
             saved?.viewPressMin ?? 0,
             saved?.viewPressMax ?? 6000,
-            tempMin,
-            tempMax,
-            tempLogMin,
-            tempLogMax(),
-            logScale,
-            logXScale,
+            untrack(() => tempMin),
+            untrack(() => tempMax),
+            untrack(() => tempLogMin),
+            untrack(() => tempLogMax()),
+            untrack(() => logScale),
+            untrack(() => logXScale),
         ),
     );
 
