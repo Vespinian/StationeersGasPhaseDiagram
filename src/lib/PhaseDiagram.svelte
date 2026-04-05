@@ -745,9 +745,9 @@
                 t += 1
             ) {
                 const p = calcPressure(t, gas, tuning);
-                const x = scaleX(t);
                 if (p === null) {
                     started = false;
+                    const x = scaleX(gas.maxLiqK);
                     const y = scaleY(gas.maxKPa);
                     ctx.lineTo(x, y);
                     ctx.stroke();
@@ -757,6 +757,7 @@
                     ctx.fill();
                     break;
                 }
+                const x = scaleX(t);
                 const y = scaleY(p);
                 if (!started) {
                     ctx.fillStyle = getGasColor(gas);
@@ -774,6 +775,7 @@
                 } else {
                     ctx.lineTo(x, y);
                     if (t === Math.ceil(viewTempMax)) {
+                        started = false;
                         ctx.stroke();
                     }
                 }
