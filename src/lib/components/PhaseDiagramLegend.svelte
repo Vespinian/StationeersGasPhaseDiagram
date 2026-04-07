@@ -1,9 +1,8 @@
 <script lang="ts">
     import { kToC, formatP, type GasData } from "$lib/gasData";
     import * as phaseCalculations from "$lib/phaseCalculations";
-    import type { SortKey, Theme } from "$lib/stores/graphState";
-    import { getThemeContext } from "$lib/stores/graphState";
-    import { defaultThemeColors, defaultTheme } from "$lib/themeDefaults";
+    import type { SortKey } from "$lib/stores/graphState";
+    import { theme, themeColors } from "$lib/themeDefaults";
     import oxygenIcon from "$lib/icons/oxygen.png";
     import nitrogenIcon from "$lib/icons/nitrogen.png";
     import pollutantIcon from "$lib/icons/pollutant.png";
@@ -20,9 +19,6 @@
     import sodiumchlorideIcon from "$lib/icons/sodiumchloride.png";
     import hydrochloricacidIcon from "$lib/icons/hydrochloricacid.png";
     import hydrazineIcon from "$lib/icons/hydrazine.png";
-
-    const ctx = getThemeContext();
-    const themeColors = $derived(ctx?.themeColors ?? defaultThemeColors.stationeers);
 
     const gasIcons: Record<string, string> = {
         N2: nitrogenIcon,
@@ -61,8 +57,6 @@
         onToggleGas,
     }: Props = $props();
 
-    const theme = $derived<Theme>(ctx?.theme ?? defaultTheme);
-
     function handleSort(key: SortKey) {
         onSort(key);
     }
@@ -78,20 +72,20 @@
             <tr>
                 <th
                     class="text-left p-2 pb-3 font-semibold border-b-2"
-                    style:border-color={themeColors.btnBorder}
-                    style:color={themeColors.text}>Gas</th
+                    style:border-color={$themeColors.btnBorder}
+                    style:color={$themeColors.text}>Gas</th
                 >
                 <th
                     class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none"
-                    style:border-color={themeColors.btnBorder}
-                    style:color={themeColors.text}
+                    style:border-color={$themeColors.btnBorder}
+                    style:color={$themeColors.text}
                     onclick={() => handleSort("name")}
                     >Name {#if sortKey === "name"}{sortAsc ? "▲" : "▼"}{/if}</th
                 >
                 <th
                     class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none"
-                    style:border-color={themeColors.btnBorder}
-                    style:color={themeColors.text}
+                    style:border-color={$themeColors.btnBorder}
+                    style:color={$themeColors.text}
                     onclick={() => handleSort("meltK")}
                     >Melt Point {#if sortKey === "meltK"}{sortAsc
                             ? "▲"
@@ -99,8 +93,8 @@
                 >
                 <th
                     class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none"
-                    style:border-color={themeColors.btnBorder}
-                    style:color={themeColors.text}
+                    style:border-color={$themeColors.btnBorder}
+                    style:color={$themeColors.text}
                     onclick={() => handleSort("minCondKPa")}
                     >Min Pressure {#if sortKey === "minCondKPa"}{sortAsc
                             ? "▲"
@@ -108,8 +102,8 @@
                 >
                 <th
                     class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none"
-                    style:border-color={themeColors.btnBorder}
-                    style:color={themeColors.text}
+                    style:border-color={$themeColors.btnBorder}
+                    style:color={$themeColors.text}
                     onclick={() => handleSort("maxLiqK")}
                     >Max Liquid {#if sortKey === "maxLiqK"}{sortAsc
                             ? "▲"
@@ -117,8 +111,8 @@
                 >
                 <th
                     class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none"
-                    style:border-color={themeColors.btnBorder}
-                    style:color={themeColors.text}
+                    style:border-color={$themeColors.btnBorder}
+                    style:color={$themeColors.text}
                     onclick={() => handleSort("maxKPa")}
                     >Max Pressure {#if sortKey === "maxKPa"}{sortAsc
                             ? "▲"
@@ -126,8 +120,8 @@
                 >
                 <th
                     class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none"
-                    style:border-color={themeColors.btnBorder}
-                    style:color={themeColors.text}
+                    style:border-color={$themeColors.btnBorder}
+                    style:color={$themeColors.text}
                     onclick={() => handleSort("specificHeat")}
                     >Specific Heat {#if sortKey === "specificHeat"}{sortAsc
                             ? "▲"
@@ -135,8 +129,8 @@
                 >
                 <th
                     class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none"
-                    style:border-color={themeColors.btnBorder}
-                    style:color={themeColors.text}
+                    style:border-color={$themeColors.btnBorder}
+                    style:color={$themeColors.text}
                     onclick={() => handleSort("latentHeat")}
                     >Latent Heat {#if sortKey === "latentHeat"}{sortAsc
                             ? "▲"
@@ -151,20 +145,20 @@
                         class="cursor-pointer transition-colors duration-150"
                         class:opacity-35={!visibleGases[key]}
                         onclick={() => handleToggleGas(key)}
-                        style:color={themeColors.text}
+                        style:color={$themeColors.text}
                     >
                         <td
                             class="p-1.5 border-b"
-                            style:border-color={themeColors.btnBorder}
+                            style:border-color={$themeColors.btnBorder}
                         >
                             <div class="flex items-center gap-2">
                                 <span
                                     class="w-3 h-3 inline-block rounded border"
                                     style:background={phaseCalculations.getGasColor(
                                         gas,
-                                        theme,
+                                        $theme,
                                     )}
-                                    style:border-color={theme === "light"
+                                    style:border-color={$theme === "light"
                                         ? "#a2a9b1"
                                         : "rgba(255,255,255,0.2)"}
                                 ></span>
@@ -178,37 +172,37 @@
                         </td>
                         <td
                             class="p-1.5 border-b"
-                            style:border-color={themeColors.btnBorder}
+                            style:border-color={$themeColors.btnBorder}
                             >{gas.name}</td
                         >
                         <td
                             class="p-1.5 border-b"
-                            style:border-color={themeColors.btnBorder}
+                            style:border-color={$themeColors.btnBorder}
                             >{gas.meltK} K ({kToC(gas.meltK)} °C)</td
                         >
                         <td
                             class="p-1.5 border-b"
-                            style:border-color={themeColors.btnBorder}
+                            style:border-color={$themeColors.btnBorder}
                             >{formatP(gas.minCondKPa)}</td
                         >
                         <td
                             class="p-1.5 border-b"
-                            style:border-color={themeColors.btnBorder}
+                            style:border-color={$themeColors.btnBorder}
                             >{gas.maxLiqK} K ({kToC(gas.maxLiqK)} °C)</td
                         >
                         <td
                             class="p-1.5 border-b"
-                            style:border-color={themeColors.btnBorder}
+                            style:border-color={$themeColors.btnBorder}
                             >{formatP(gas.maxKPa)}</td
                         >
                         <td
                             class="p-1.5 border-b"
-                            style:border-color={themeColors.btnBorder}
+                            style:border-color={$themeColors.btnBorder}
                             >{gas.specificHeat} J/mol·K</td
                         >
                         <td
                             class="p-1.5 border-b"
-                            style:border-color={themeColors.btnBorder}
+                            style:border-color={$themeColors.btnBorder}
                             >{gas.latentHeat} J/mol</td
                         >
                     </tr>

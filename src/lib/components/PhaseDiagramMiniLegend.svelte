@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { GasData } from "$lib/gasData";
-    import { getThemeContext } from "$lib/stores/graphState";
-    import { defaultThemeColors } from "$lib/themeDefaults";
+    import { themeColors } from "$lib/themeDefaults";
     import oxygenIcon from "$lib/icons/oxygen.png";
     import nitrogenIcon from "$lib/icons/nitrogen.png";
     import pollutantIcon from "$lib/icons/pollutant.png";
@@ -18,9 +17,6 @@
     import sodiumchlorideIcon from "$lib/icons/sodiumchloride.png";
     import hydrochloricacidIcon from "$lib/icons/hydrochloricacid.png";
     import hydrazineIcon from "$lib/icons/hydrazine.png";
-
-    const ctx = getThemeContext();
-    const tc = $derived(ctx?.themeColors ?? defaultThemeColors.stationeers);
 
     const gasIcons: Record<string, string> = {
         N2: nitrogenIcon,
@@ -52,8 +48,8 @@
 
 <div
     class="absolute top-1/2 -translate-y-1/2 right-10 grid grid-cols-2 gap-1 z-20 p-2 rounded border"
-    style:background-color={tc.btnBg}
-    style:border-color={tc.btnBorder}
+    style:background-color={$themeColors.btnBg}
+    style:border-color={$themeColors.btnBorder}
 >
     {#each sortedGases as [key, gas] (key)}
         <div

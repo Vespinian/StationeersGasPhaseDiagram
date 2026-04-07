@@ -1,25 +1,5 @@
 import type { GasData } from './gasData';
 
-export interface ThemeColors {
-	bg: string;
-	plotBg: string;
-	grid: string;
-	axis: string;
-	tickText: string;
-	tickTextSecondary: string;
-	axisLabel: string;
-	refLine: string;
-	refLine0K: string;
-	refLineRed: string;
-	hoverLine: string;
-	hoverLineH: string;
-	hoverDotStroke: string;
-	tooltipBg: string;
-	tooltipBorder: string;
-	tooltipText: string;
-	tooltipHeader: string;
-}
-
 export interface Margin {
 	top: number;
 	right: number;
@@ -119,70 +99,6 @@ export function getGasLabelColor(
 		return gas.labelColor;
 	}
 	return gas.labelColor;
-}
-
-export function getThemeColors(theme: 'stationeers' | 'light' | 'dark'): ThemeColors {
-	if (theme === 'dark') {
-		return {
-			bg: '#101418',
-			plotBg: '#0a0d10',
-			grid: 'rgba(255,255,255,0.06)',
-			axis: 'rgba(255,255,255,0.2)',
-			tickText: '#c8cde0',
-			tickTextSecondary: '#7a7f98',
-			axisLabel: '#c8cde0',
-			refLine: '#5b7fd6',
-			refLine0K: '#7a9ae0',
-			refLineRed: '#f07178',
-			hoverLine: '#c8cde0',
-			hoverLineH: 'rgba(200,205,224,0.25)',
-			hoverDotStroke: '#fff',
-			tooltipBg: 'rgba(16,20,24,0.95)',
-			tooltipBorder: 'rgba(255,255,255,0.1)',
-			tooltipText: '#c8cde0',
-			tooltipHeader: '#fff',
-		};
-	}
-	if (theme === 'light') {
-		return {
-			bg: '#e8e8e8',
-			plotBg: '#f2f2f2',
-			grid: '#d0d0d0',
-			axis: '#888',
-			tickText: '#202122',
-			tickTextSecondary: '#666',
-			axisLabel: '#202122',
-			refLine: '#3366cc',
-			refLine0K: '#6688dd',
-			refLineRed: '#d33',
-			hoverLine: '#202122',
-			hoverLineH: 'rgba(32,33,34,0.3)',
-			hoverDotStroke: '#333',
-			tooltipBg: 'rgba(255,255,255,0.95)',
-			tooltipBorder: '#a2a9b1',
-			tooltipText: '#202122',
-			tooltipHeader: '#000',
-		};
-	}
-	return {
-		bg: '#1a2233',
-		plotBg: '#1e2a3d',
-		grid: 'rgba(100,140,200,0.12)',
-		axis: 'rgba(100,140,200,0.3)',
-		tickText: '#b8c8e0',
-		tickTextSecondary: '#7a8fa8',
-		axisLabel: '#b8c8e0',
-		refLine: '#5b7fd6',
-		refLine0K: '#7a9ae0',
-		refLineRed: '#ff4444',
-		hoverLine: '#b8c8e0',
-		hoverLineH: 'rgba(184,200,224,0.3)',
-		hoverDotStroke: '#fff',
-		tooltipBg: 'rgba(26,34,51,0.95)',
-		tooltipBorder: 'rgba(100,140,200,0.2)',
-		tooltipText: '#b8c8e0',
-		tooltipHeader: '#d0e0f0',
-	};
 }
 
 export function plotDimensions(width: number, margin: Margin) {

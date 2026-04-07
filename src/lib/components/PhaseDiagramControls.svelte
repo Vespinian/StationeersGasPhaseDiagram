@@ -1,10 +1,6 @@
 <script lang="ts">
     import type { Theme } from "$lib/stores/graphState";
-    import { getThemeContext } from "$lib/stores/graphState";
-    import { defaultThemeColors, defaultTheme } from "$lib/themeDefaults";
-
-    const ctx = getThemeContext();
-    const themeColors = $derived(ctx?.themeColors ?? defaultThemeColors.stationeers);
+    import { theme, themeColors } from "$lib/themeDefaults";
 
     interface Props {
         showGrid: boolean;
@@ -56,8 +52,6 @@
         onShowShareUrlChange,
     }: Props = $props();
 
-    const theme = $derived(ctx?.theme ?? defaultTheme);
-
     function handleShowGridChange(e: Event) {
         const target = e.target as HTMLInputElement;
         onShowGridChange(target.checked);
@@ -80,9 +74,9 @@
 </script>
 
 <div
-    class="flex flex-col gap-2.5 mb-5 justify-center p-2.5 rounded-lg max-w-full mx-auto flex-wrap"
-    style:background-color={themeColors.controlsBg}
-    style:box-shadow={themeColors.controlsShadow}
+    class="flex flex-col gap-2.5 mb-5 justify-center p-2.5 rounded-lg mx-auto flex-wrap"
+    style:background-color={$themeColors.controlsBg}
+    style:box-shadow={$themeColors.controlsShadow}
 >
     <div class="flex gap-2 md:gap-5 justify-center flex-wrap">
         <label class="flex items-center gap-1.5 cursor-pointer">
@@ -122,46 +116,46 @@
         <button
             onclick={onResetView}
             class="px-1 py-0.5 rounded cursor-pointer text-sm"
-            style:background-color={themeColors.btnBg}
-            style:color={themeColors.btnText}
-            style:border="1px solid {themeColors.btnBorder}">Reset View</button
+            style:background-color={$themeColors.btnBg}
+            style:color={$themeColors.btnText}
+            style:border="1px solid {$themeColors.btnBorder}">Reset View</button
         >
         <button
             onclick={onResetGases}
             class="px-1 py-0.5 rounded cursor-pointer text-sm"
-            style:background-color={themeColors.btnBg}
-            style:color={themeColors.btnText}
-            style:border="1px solid {themeColors.btnBorder}"
+            style:background-color={$themeColors.btnBg}
+            style:color={$themeColors.btnText}
+            style:border="1px solid {$themeColors.btnBorder}"
             >Reset Selection</button
         >
         <button
             onclick={onClearAllGases}
             class="px-1 py-0.5 rounded cursor-pointer text-sm"
-            style:background-color={themeColors.btnBg}
-            style:color={themeColors.btnText}
-            style:border="1px solid {themeColors.btnBorder}">Clear All</button
+            style:background-color={$themeColors.btnBg}
+            style:color={$themeColors.btnText}
+            style:border="1px solid {$themeColors.btnBorder}">Clear All</button
         >
         <button
             onclick={onCopyShare}
             class="px-1 py-0.5 rounded cursor-pointer text-sm"
-            style:background-color={themeColors.btnBg}
-            style:color={themeColors.btnText}
-            style:border="1px solid {themeColors.btnBorder}">{shareText}</button
+            style:background-color={$themeColors.btnBg}
+            style:color={$themeColors.btnText}
+            style:border="1px solid {$themeColors.btnBorder}">{shareText}</button
         >
         <button
             onclick={onToggleMiniLegend}
             class="px-1 py-0.5 rounded cursor-pointer text-sm"
-            style:background-color={themeColors.btnBg}
-            style:color={themeColors.btnText}
-            style:border="1px solid {themeColors.btnBorder}"
+            style:background-color={$themeColors.btnBg}
+            style:color={$themeColors.btnText}
+            style:border="1px solid {$themeColors.btnBorder}"
             >{showMiniLegend ? "Hide" : "Show"} Legend</button
         >
         <button
             onclick={onToggleHelp}
             class="px-1 py-0.5 rounded cursor-pointer text-sm"
-            style:background-color={themeColors.btnBg}
-            style:color={themeColors.btnText}
-            style:border="1px solid {themeColors.btnBorder}">[?]</button
+            style:background-color={$themeColors.btnBg}
+            style:color={$themeColors.btnText}
+            style:border="1px solid {$themeColors.btnBorder}">[?]</button
         >
     </div>
 </div>
@@ -173,16 +167,16 @@
             readonly
             value={shareUrl}
             class="w-full max-w-150 px-3 py-2 rounded text-xs font-mono"
-            style:border="1px solid {themeColors.inputBorder}"
-            style:background-color={themeColors.inputBg}
-            style:color={themeColors.inputText}
+            style:border="1px solid {$themeColors.inputBorder}"
+            style:background-color={$themeColors.inputBg}
+            style:color={$themeColors.inputText}
             class:animate-[inputGlow_1.5s_ease-out]={urlGenerated}
             onclick={(e) => (e.target as HTMLInputElement).select()}
         />
         <button
             onclick={() => onShowShareUrlChange(false)}
             class="bg-transparent border-none text-xl cursor-pointer p-1"
-            style:color={themeColors.btnText}>×</button
+            style:color={$themeColors.btnText}>×</button
         >
     </div>
 {/if}
@@ -190,25 +184,25 @@
 {#if showHelp}
     <div
         class="max-w-100 mx-auto mb-3.75 rounded-lg p-5 text-sm leading-relaxed"
-        style:background-color={themeColors.helpBg}
-        style:border="1px solid {themeColors.helpBorder}"
-        style:box-shadow={theme === "light"
+        style:background-color={$themeColors.helpBg}
+        style:border="1px solid {$themeColors.helpBorder}"
+        style:box-shadow={$theme === "light"
             ? "0 1px 3px rgba(0,0,0,0.1)"
             : "none"}
     >
-        <h3 class="m-0 mb-2 text-base" style:color={themeColors.h3}>Theme</h3>
+        <h3 class="m-0 mb-2 text-base" style:color={$themeColors.h3}>Theme</h3>
         <ul class="m-0 pl-5">
             <li>
                 <select
-                    value={theme}
+                    value={$theme}
                     onchange={(e) =>
                         onThemeChange(
                             (e.target as HTMLSelectElement).value as Theme,
                         )}
                     class="px-2 py-1 rounded text-sm cursor-pointer"
-                    style:background-color={themeColors.selectBg}
-                    style:color={themeColors.selectText}
-                    style:border="1px solid {themeColors.selectBorder}"
+                    style:background-color={$themeColors.selectBg}
+                    style:color={$themeColors.selectText}
+                    style:border="1px solid {$themeColors.selectBorder}"
                 >
                     <option value="stationeers">Stationeers</option>
                     <option value="light">Light</option>
@@ -216,7 +210,7 @@
                 </select>
             </li>
         </ul>
-        <h3 class="m-0 mb-2 text-base" style:color={themeColors.h3}>
+        <h3 class="m-0 mb-2 text-base" style:color={$themeColors.h3}>
             Controls
         </h3>
         <ul class="m-0 pl-5">

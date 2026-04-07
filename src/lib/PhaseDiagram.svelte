@@ -1,11 +1,9 @@
 <script lang="ts">
-    import { untrack, setContext } from "svelte";
+    import { untrack } from "svelte";
     import { gasData } from "$lib/gasData";
     import {
         type Theme,
         type SortKey,
-        type ThemeContextValue,
-        THEME_CONTEXT_KEY,
         loadState,
         loadTheme,
         loadShowMiniLegend,
@@ -21,7 +19,7 @@
         shareUrl,
         sortedGasData,
     } from "$lib/stores/graphState";
-    import { defaultThemeColors, defaultTheme } from "$lib/themeDefaults";
+    import { defaultThemeColors, theme } from "$lib/themeDefaults";
     import PhaseDiagramCanvas from "$lib/components/PhaseDiagramCanvas.svelte";
     import PhaseDiagramLegend from "$lib/components/PhaseDiagramLegend.svelte";
     import PhaseDiagramControls from "$lib/components/PhaseDiagramControls.svelte";
@@ -32,9 +30,13 @@
     let logScale = $state(getSaved(saved, "logScale", false));
     let logXScale = $state(getSaved(saved, "logXScale", false));
     let invertPanY = $state(getSaved(saved, "invertPanY", true));
-    let theme = $state<Theme>(loadTheme());
+    let currentTheme = $state<Theme>(loadTheme());
 
-    const themeColors = $derived(defaultThemeColors[theme] ?? defaultThemeColors.stationeers);
+    const themeColors = $derived(defaultThemeColors[currentTheme] ?? defaultThemeColors.stationeers);
+
+    $effect(() => {
+        theme.set(currentTheme);
+    });
 
     let visibleGases: Record<string, boolean> = $state(
         getSaved(saved, "visibleGases", defaultVisibleGases),
@@ -198,19 +200,14 @@
     $effect(() => {
         document.body.classList.remove("light-mode", "dark-mode");
         document.documentElement.classList.remove("light-mode", "dark-mode");
-        if (theme === "light") {
+        if (currentTheme === "light") {
             document.body.classList.add("light-mode");
             document.documentElement.classList.add("light-mode");
-        } else if (theme === "dark") {
+        } else if (currentTheme === "dark") {
             document.body.classList.add("dark-mode");
             document.documentElement.classList.add("dark-mode");
         }
-        saveTheme(theme);
-    });
-
-    $effect(() => {
-        const ctx: ThemeContextValue = { theme, themeColors };
-        setContext(THEME_CONTEXT_KEY, ctx);
+        saveTheme(currentTheme);
     });
 
     $effect(() => {
@@ -373,7 +370,7 @@
         onCopyShare={copyShare}
         onToggleMiniLegend={() => (showMiniLegend = !showMiniLegend)}
         onToggleHelp={() => (showHelp = !showHelp)}
-        onThemeChange={(t) => (theme = t)}
+        onThemeChange={(t) => (currentTheme = t)}
         onShowShareUrlChange={(v) => {
             showShareUrl = v;
             if (!v) shareText = "Share";

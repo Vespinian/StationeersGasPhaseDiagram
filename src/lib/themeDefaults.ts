@@ -1,4 +1,44 @@
-export const defaultThemeColors = {
+import { writable, derived } from 'svelte/store';
+
+export interface ThemeColors {
+    bg: string;
+    plotBg: string;
+    grid: string;
+    axis: string;
+    tickText: string;
+    tickTextSecondary: string;
+    axisLabel: string;
+    refLine: string;
+    refLine0K: string;
+    refLineRed: string;
+    hoverLine: string;
+    hoverLineH: string;
+    hoverDotStroke: string;
+    tooltipBg: string;
+    tooltipBorder: string;
+    tooltipText: string;
+    tooltipHeader: string;
+    text: string;
+    subtitle: string;
+    controlsBg: string;
+    controlsShadow: string;
+    inputBg: string;
+    inputBorder: string;
+    inputText: string;
+    btnBg: string;
+    btnText: string;
+    btnBorder: string;
+    helpBg: string;
+    helpBorder: string;
+    h3: string;
+    selectBg: string;
+    selectText: string;
+    selectBorder: string;
+}
+
+export type ThemeKey = 'stationeers' | 'light' | 'dark';
+
+export const defaultThemeColors: Record<ThemeKey, ThemeColors> = {
     stationeers: {
         bg: '#1a2233',
         plotBg: '#1e2a3d',
@@ -107,3 +147,9 @@ export const defaultThemeColors = {
 };
 
 export const defaultTheme = 'stationeers';
+
+export const theme = writable<ThemeKey>(defaultTheme);
+
+export const themeColors = derived(theme, ($theme) => 
+    defaultThemeColors[$theme] ?? defaultThemeColors.stationeers
+);

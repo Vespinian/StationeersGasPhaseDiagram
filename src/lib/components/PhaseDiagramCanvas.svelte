@@ -10,7 +10,6 @@
     import * as phaseCalculations from "$lib/phaseCalculations";
     import {
         type HoverValue,
-        getThemeContext,
         HARD_TEMP_MIN,
         HARD_TEMP_MAX,
         HARD_LOG_TEMP_MIN,
@@ -20,13 +19,9 @@
         HARD_LOG_PRESSURE_MIN,
         HARD_LOG_PRESSURE_MAX,
     } from "$lib/stores/graphState";
-    import { defaultThemeColors, defaultTheme } from "$lib/themeDefaults";
+    import { defaultThemeColors, theme, themeColors } from "$lib/themeDefaults";
     import PhaseDiagramTooltip from "$lib/components/PhaseDiagramTooltip.svelte";
     import PhaseDiagramMiniLegend from "$lib/components/PhaseDiagramMiniLegend.svelte";
-
-    const ctx = getThemeContext();
-    const theme = $derived(ctx?.theme ?? defaultTheme);
-    const tc = $derived(ctx?.themeColors ?? defaultThemeColors.stationeers);
 
     interface Props {
         showGrid: boolean;
@@ -73,7 +68,6 @@
     }: Props = $props();
 
     const {
-        getThemeColors,
         generateTicks,
         generateLogTicks,
         formatTickValue,
@@ -194,8 +188,8 @@
             {};
         for (const [key, gas] of Object.entries(gasData)) {
             colors[key] = {
-                color: phaseCalculations.getGasColor(gas, theme),
-                labelColor: phaseCalculations.getGasLabelColor(gas, theme),
+                color: phaseCalculations.getGasColor(gas, $theme),
+                labelColor: phaseCalculations.getGasLabelColor(gas, $theme),
             };
         }
         return colors;
@@ -219,7 +213,7 @@
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
-        const t = tc;
+        const t = $themeColors;
 
         const xTicks = logXScale
             ? generateLogTicks(viewTempMin, viewTempMax)
@@ -917,7 +911,7 @@
     $effect(() => {
         void visibleGases;
         void showGrid;
-        void theme;
+        void $theme;
         void viewTempMin;
         void viewTempMax;
         void viewPressMin;

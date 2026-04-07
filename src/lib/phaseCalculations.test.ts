@@ -8,7 +8,6 @@ import {
 	scaleY,
 	invScaleX,
 	invScaleY,
-	getThemeColors,
 } from './phaseCalculations';
 
 describe('niceStep', () => {
@@ -124,25 +123,5 @@ describe('invScaleY', () => {
 	it('inverts linear scale', () => {
 		expect(invScaleY(540, 0, 1000, margin, plotHeight, false)).toBe(0);
 		expect(invScaleY(40, 0, 1000, margin, plotHeight, false)).toBe(1000);
-	});
-});
-
-describe('getThemeColors', () => {
-	it('returns dark theme colors', () => {
-		const colors = getThemeColors('dark');
-		expect(colors.bg).toBe('#101418');
-		expect(colors.refLine).toBe('#5b7fd6');
-	});
-
-	it('returns light theme colors', () => {
-		const colors = getThemeColors('light');
-		expect(colors.bg).toBe('#e8e8e8');
-		expect(colors.refLine).toBe('#3366cc');
-	});
-
-	it('returns stationeers theme colors', () => {
-		const colors = getThemeColors('stationeers');
-		expect(colors.bg).toBe('#1a2233');
-		expect(colors.refLine).toBe('#5b7fd6');
 	});
 });
