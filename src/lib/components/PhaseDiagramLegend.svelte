@@ -83,7 +83,7 @@
                     >Name {#if sortKey === "name"}{sortAsc ? "▲" : "▼"}{/if}</th
                 >
                 <th
-                    class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none"
+                    class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none min-w-15"
                     style:border-color={$themeColors.btnBorder}
                     style:color={$themeColors.text}
                     onclick={() => handleSort("meltK")}
@@ -101,7 +101,7 @@
                             : "▼"}{/if}</th
                 >
                 <th
-                    class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none"
+                    class="text-left p-2 pb-3 font-semibold border-b-2 cursor-pointer select-none min-w-15"
                     style:border-color={$themeColors.btnBorder}
                     style:color={$themeColors.text}
                     onclick={() => handleSort("maxLiqK")}

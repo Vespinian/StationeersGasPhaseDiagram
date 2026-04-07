@@ -921,6 +921,7 @@
 
     $effect(() => {
         void logXScale;
+        void logScale;
         updateLockedPosition();
     });
 </script>
