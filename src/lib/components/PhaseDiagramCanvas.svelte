@@ -918,6 +918,11 @@
         void viewPressMax;
         drawGraph();
     });
+
+    $effect(() => {
+        void logXScale;
+        updateLockedPosition();
+    });
 </script>
 
 <div class="w-full overflow-x-auto relative">

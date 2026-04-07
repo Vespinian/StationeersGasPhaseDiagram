@@ -32,7 +32,9 @@
     let invertPanY = $state(getSaved(saved, "invertPanY", true));
     let currentTheme = $state<Theme>(loadTheme());
 
-    const themeColors = $derived(defaultThemeColors[currentTheme] ?? defaultThemeColors.stationeers);
+    const themeColors = $derived(
+        defaultThemeColors[currentTheme] ?? defaultThemeColors.stationeers,
+    );
 
     $effect(() => {
         theme.set(currentTheme);
@@ -341,8 +343,7 @@
     style:background-color={themeColors.bg}
     style:color={themeColors.text}
 >
-    <h2 class="text-center mb-2.5 max-w-full"
-        style:color={themeColors.text}>
+    <h2 class="text-center mb-2.5 max-w-full" style:color={themeColors.text}>
         Stationeers Gas Phase Diagram
     </h2>
     <p class="text-center text-xs mb-5" style:color={themeColors.subtitle}>
