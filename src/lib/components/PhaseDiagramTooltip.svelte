@@ -1,6 +1,6 @@
 <script lang="ts">
     import { kToC } from "$lib/gasData";
-    import * as phaseCalculations from "$lib/phaseCalculations";
+    import * as graphHelpers from "$lib/graphHelpers";
     import { gasData } from "$lib/gasData";
     import type { HoverValue } from "$lib/stores/graphState";
     import { theme, themeColors } from "$lib/themeDefaults";
@@ -44,14 +44,11 @@
             {@const g = gasData[gasKey]}
             <div
                 class="text-xs flex items-center gap-1.5"
-                style:color={phaseCalculations.getGasLabelColor(g, $theme)}
+                style:color={graphHelpers.getGasLabelColor(g, $theme)}
             >
                 <span
                     class="w-2 h-2 rounded-full inline-block"
-                    style:background={phaseCalculations.getGasLabelColor(
-                        g,
-                        $theme,
-                    )}
+                    style:background={graphHelpers.getGasLabelColor(g, $theme)}
                 ></span>
                 {g.symbol}: {Math.round(value)} kPa
             </div>

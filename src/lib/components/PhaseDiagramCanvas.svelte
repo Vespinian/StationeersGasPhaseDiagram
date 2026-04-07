@@ -7,7 +7,7 @@
         kToC,
         type GasData,
     } from "$lib/gasData";
-    import * as phaseCalculations from "$lib/phaseCalculations";
+    import * as graphHelpers from "$lib/graphHelpers";
     import {
         type HoverValue,
         HARD_TEMP_MIN,
@@ -75,7 +75,7 @@
         scaleY: doScaleY,
         invScaleX: doInvScaleX,
         invScaleY: doInvScaleY,
-    } = phaseCalculations;
+    } = graphHelpers;
 
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
 
@@ -188,8 +188,8 @@
             {};
         for (const [key, gas] of Object.entries(gasData)) {
             colors[key] = {
-                color: phaseCalculations.getGasColor(gas, $theme),
-                labelColor: phaseCalculations.getGasLabelColor(gas, $theme),
+                color: graphHelpers.getGasColor(gas, $theme),
+                labelColor: graphHelpers.getGasLabelColor(gas, $theme),
             };
         }
         return colors;
@@ -926,7 +926,7 @@
     });
 </script>
 
-<div class="w-full overflow-x-auto relative">
+<div class="w-full overflow-x-auto">
     <canvas
         bind:this={canvas}
         onmousemove={handleMouseMove}
@@ -936,7 +936,7 @@
         onmouseup={handleMouseUp}
         onmouseenter={handleCanvasMouseOver}
         ontouchmove={handleTouchMove}
-        class="w-full h-auto rounded"
+        class="w-full rounded"
         class:cursor-grab={!isPanning}
         class:cursor-grabbing={isPanning}
     ></canvas>

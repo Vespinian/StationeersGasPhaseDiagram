@@ -1,6 +1,6 @@
 <script lang="ts">
     import { kToC, formatP, type GasData } from "$lib/gasData";
-    import * as phaseCalculations from "$lib/phaseCalculations";
+    import * as graphHelpers from "$lib/graphHelpers";
     import type { SortKey } from "$lib/stores/graphState";
     import { theme, themeColors } from "$lib/themeDefaults";
     import oxygenIcon from "$lib/icons/oxygen.png";
@@ -154,7 +154,7 @@
                             <div class="flex items-center gap-2">
                                 <span
                                     class="w-3 h-3 inline-block rounded border"
-                                    style:background={phaseCalculations.getGasColor(
+                                    style:background={graphHelpers.getGasColor(
                                         gas,
                                         $theme,
                                     )}
