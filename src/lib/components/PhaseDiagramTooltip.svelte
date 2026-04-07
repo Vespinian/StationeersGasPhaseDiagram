@@ -10,11 +10,14 @@
         lockedValues: HoverValue[];
         lockedTooltipX: number;
         lockedTooltipY: number;
-        hoveredTemp: number | null;
-        hoveredValues: HoverValue[];
-        tooltipX: number;
-        tooltipY: number;
+        tooltipFlipped: boolean;
         theme: Theme;
+        tc: {
+            btnBg: string;
+            btnBorder: string;
+            text: string;
+            btnText: string;
+        };
     }
 
     let {
@@ -23,40 +26,39 @@
         lockedValues,
         lockedTooltipX,
         lockedTooltipY,
-        hoveredTemp,
-        hoveredValues,
-        tooltipX,
-        tooltipY,
+        tooltipFlipped,
         theme,
+        tc,
     }: Props = $props();
+
+    const displayTemp = $derived(lockedTemp);
+    const displayValues = $derived(lockedValues);
 </script>
 
-{#if (isLocked && lockedTemp !== null && lockedValues.length > 0) || (!isLocked && hoveredTemp !== null && hoveredValues.length > 0)}
-    {@const displayTemp = (isLocked ? lockedTemp : hoveredTemp)!}
+{#if displayTemp !== null && displayValues.length > 0}
     <div
-        class="tooltip"
-        style="left: {isLocked ? lockedTooltipX : tooltipX}px; top: {isLocked
-            ? lockedTooltipY
-            : tooltipY}px;"
+        class="absolute rounded p-2 pointer-events-none min-w-40 max-w-[200px] z-10 box-border"
+        style:left="{lockedTooltipX}px"
+        style:top="{lockedTooltipY}px"
+        style:background-color={tc.btnBg}
+        style:border="1px solid {tc.btnBorder}"
+        style:transform={tooltipFlipped ? "translateX(-100%)" : "none"}
     >
-        <div class="tooltip-header">
+        <div class="text-xs font-bold mb-1" style:color={tc.btnText}>
             {displayTemp}K ({kToC(displayTemp)}°C)
             {#if isLocked}
-                <span class="lock-icon">🔒</span>
+                <span class="ml-1.5 text-[11px]">🔒</span>
             {/if}
         </div>
-        {#each isLocked ? lockedValues : hoveredValues as { gasKey, value } (gasKey)}
+        {#each displayValues as { gasKey, value } (gasKey)}
             {@const g = gasData[gasKey]}
             <div
-                class="tooltip-row"
-                style="color: {phaseCalculations.getGasLabelColor(g, theme)}"
+                class="text-xs flex items-center gap-1.5"
+                style:color={phaseCalculations.getGasLabelColor(g, theme)}
             >
                 <span
-                    class="tooltip-dot"
-                    style="background: {phaseCalculations.getGasLabelColor(
-                        g,
-                        theme,
-                    )}"
+                    class="w-2 h-2 rounded-full inline-block"
+                    style:background={phaseCalculations.getGasLabelColor(g, theme)}
                 ></span>
                 {g.symbol}: {Math.round(value)} kPa
             </div>

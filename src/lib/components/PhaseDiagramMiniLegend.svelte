@@ -39,17 +39,21 @@
     interface Props {
         visibleGases: Record<string, boolean>;
         sortedGases: [string, GasData][];
+        tc: {
+            btnBg: string;
+            btnBorder: string;
+        };
         onToggleGas: (key: string) => void;
     }
 
-    let { visibleGases, sortedGases, onToggleGas }: Props = $props();
+    let { visibleGases, sortedGases, tc, onToggleGas }: Props = $props();
 </script>
 
-<div class="mini-legend">
+<div class="absolute top-1/2 -translate-y-1/2 right-10 grid grid-cols-2 gap-1 z-20 p-2 rounded border" style:background-color={tc.btnBg} style:border-color={tc.btnBorder}>
     {#each sortedGases as [key, gas] (key)}
         <div
-            class="mini-legend-item"
-            class:hidden={!visibleGases[key]}
+            class="w-8 h-8 p-0.5 cursor-pointer rounded flex items-center justify-center transition-opacity touch-manipulation"
+            class:opacity-30={!visibleGases[key]}
             onclick={() => onToggleGas(key)}
             onkeydown={(e) => {
                 if (e.key === "Enter" || e.key === " ") onToggleGas(key);
@@ -58,7 +62,7 @@
             tabindex="0"
             title={gas.name}
         >
-            <img src={gasIcons[key]} alt={gas.symbol} />
+            <img class="w-9 h-9 object-contain" src={gasIcons[key]} alt={gas.symbol} />
         </div>
     {/each}
 </div>

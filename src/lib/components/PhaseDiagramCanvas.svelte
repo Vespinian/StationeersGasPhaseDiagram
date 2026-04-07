@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { gasData, gasTuning, calcPressure, kToC } from "$lib/gasData";
+    import { gasData, gasTuning, calcPressure, kToC, type GasData } from "$lib/gasData";
     import * as phaseCalculations from "$lib/phaseCalculations";
     import {
         type Theme,
@@ -14,9 +14,18 @@
         HARD_LOG_PRESSURE_MIN,
         HARD_LOG_PRESSURE_MAX,
     } from "$lib/stores/graphState";
+    import PhaseDiagramTooltip from "$lib/components/PhaseDiagramTooltip.svelte";
+    import PhaseDiagramMiniLegend from "$lib/components/PhaseDiagramMiniLegend.svelte";
 
     interface Props {
         theme: Theme;
+        themeColors: {
+            text: string;
+            subtitle: string;
+            btnBg: string;
+            btnText: string;
+            btnBorder: string;
+        };
         showGrid: boolean;
         logScale: boolean;
         logXScale: boolean;
@@ -27,26 +36,10 @@
         viewPressMin: number;
         viewPressMax: number;
         isLocked: boolean;
-        lockedTemp: number | null;
-        lockedValues: HoverValue[];
-        lockedX: number | null;
-        lockedTooltipX: number;
-        lockedTooltipY: number;
+        showMiniLegend: boolean;
+        sortedGases: [string, GasData][];
         graphMoved: boolean;
-        onHoveredChange: (
-            x: number | null,
-            temp: number | null,
-            values: HoverValue[],
-            tooltipX: number,
-            tooltipY: number,
-        ) => void;
-        onLockedChange: (
-            x: number | null,
-            temp: number | null,
-            values: HoverValue[],
-            tooltipX: number,
-            tooltipY: number,
-        ) => void;
+        onToggleGas: (key: string) => void;
         onGraphMovedChange: (moved: boolean) => void;
         onViewChange: (
             minT: number,
@@ -59,6 +52,7 @@
 
     let {
         theme,
+        themeColors: tc,
         showGrid,
         logScale,
         logXScale,
@@ -69,13 +63,10 @@
         viewPressMin,
         viewPressMax,
         isLocked,
-        lockedTemp,
-        lockedValues,
-        lockedX,
-        lockedTooltipX,
-        lockedTooltipY,
-        onHoveredChange,
-        onLockedChange,
+        showMiniLegend,
+        sortedGases,
+        graphMoved,
+        onToggleGas,
         onGraphMovedChange,
         onViewChange,
         onToggleLock,
@@ -104,25 +95,47 @@
     let hoveredValues = $state<HoverValue[]>([]);
     let tooltipX = $state(0);
     let tooltipY = $state(0);
+    let tooltipFlipped = $state(false);
 
     let lockedXInternal = $state<number | null>(null);
     let lockedTempInternal = $state<number | null>(null);
     let lockedValuesInternal = $state<HoverValue[]>([]);
     let lockedTooltipXInternal = $state(0);
     let lockedTooltipYInternal = $state(0);
+    let lockedTooltipFlipped = $state(false);
 
     let isPanning = $state(false);
     let panPrevSvgX = $state(0);
     let panPrevSvgY = $state(0);
 
+    let localIsLocked = $state(false);
+
     $effect(() => {
         void isLocked;
-        lockedXInternal = lockedX;
-        lockedTempInternal = lockedTemp;
-        lockedValuesInternal = lockedValues;
-        lockedTooltipXInternal = lockedTooltipX;
-        lockedTooltipYInternal = lockedTooltipY;
+        localIsLocked = isLocked;
     });
+
+    function handleToggleLock() {
+        localIsLocked = !localIsLocked;
+        if (localIsLocked && hoveredTemp !== null) {
+            lockedTempInternal = hoveredTemp;
+            lockedValuesInternal = [...hoveredValues];
+            lockedXInternal = hoveredX;
+            const tooltipWidth = 200;
+            const flipThreshold = canvasWidth - tooltipWidth - 15;
+            lockedTooltipFlipped = hoveredX > flipThreshold;
+            lockedTooltipXInternal = lockedTooltipFlipped 
+                ? hoveredX - tooltipWidth - 15 
+                : hoveredX + 15;
+            lockedTooltipYInternal = Math.max(margin.top, 50);
+        } else {
+            lockedTempInternal = null;
+            lockedValuesInternal = [];
+            lockedXInternal = null;
+        }
+        onToggleLock();
+        drawGraph();
+    }
 
     function plotWidth(): number {
         return canvasWidth - margin.left - margin.right;
@@ -342,8 +355,8 @@
         }
 
         const displayX =
-            isLocked && lockedXInternal !== null ? lockedXInternal : hoveredX;
-        const displayValues = isLocked ? lockedValuesInternal : hoveredValues;
+            localIsLocked && lockedXInternal !== null ? lockedXInternal : hoveredX;
+        const displayValues = localIsLocked ? lockedValuesInternal : hoveredValues;
 
         if (displayX !== null && displayValues.length > 0) {
             ctx.strokeStyle = t.hoverLine;
@@ -462,7 +475,7 @@
     }
 
     function updateLockedPosition() {
-        if (isLocked && lockedTempInternal !== null) {
+        if (localIsLocked && lockedTempInternal !== null) {
             lockedXInternal = scaleX(lockedTempInternal);
             const values: HoverValue[] = [];
             for (const [key, gas] of Object.entries(gasData)) {
@@ -473,18 +486,13 @@
                 }
             }
             lockedValuesInternal = values;
-            lockedTooltipXInternal = Math.max(
-                85,
-                Math.min(lockedXInternal + 85, canvasWidth - 200),
-            );
+            const tooltipWidth = 200;
+            const flipThreshold = canvasWidth - tooltipWidth - 85;
+            lockedTooltipFlipped = lockedXInternal > flipThreshold;
+            lockedTooltipXInternal = lockedTooltipFlipped 
+                ? lockedXInternal - tooltipWidth - 15 
+                : Math.max(85, lockedXInternal + 85);
             lockedTooltipYInternal = Math.max(margin.top, 50);
-            onLockedChange(
-                lockedXInternal,
-                lockedTempInternal,
-                lockedValuesInternal,
-                lockedTooltipXInternal,
-                lockedTooltipYInternal,
-            );
         }
     }
 
@@ -506,20 +514,18 @@
             }
             hoveredValues = values;
 
-            tooltipX = Math.max(15, Math.min(svgX + 15, canvasWidth - 200));
+            const tooltipWidth = 200;
+            const flipThreshold = canvasWidth - tooltipWidth - 15;
+            tooltipFlipped = svgX > flipThreshold;
+            tooltipX = tooltipFlipped ? svgX - tooltipWidth - 15 : svgX + 15;
             tooltipY = Math.max(margin.top, 50);
-            onHoveredChange(
-                hoveredX,
-                hoveredTemp,
-                hoveredValues,
-                tooltipX,
-                tooltipY,
-            );
         } else {
             hoveredX = null;
             hoveredTemp = null;
             hoveredValues = [];
-            onHoveredChange(null, null, [], 0, 0);
+            tooltipX = 0;
+            tooltipY = 0;
+            tooltipFlipped = false;
         }
     }
 
@@ -655,7 +661,6 @@
             hoveredX = null;
             hoveredTemp = null;
             hoveredValues = [];
-            onHoveredChange(null, null, [], 0, 0);
             return false;
         }
 
@@ -671,21 +676,17 @@
             }
         }
         hoveredValues = values;
-        tooltipX = Math.max(15, Math.min(svgX + 15, canvasWidth - 200));
+        const tooltipWidth = 200;
+        const flipThreshold = canvasWidth - tooltipWidth - 15;
+        tooltipFlipped = svgX > flipThreshold;
+        tooltipX = tooltipFlipped ? svgX - tooltipWidth - 15 : svgX + 15;
         tooltipY = Math.max(margin.top, 50);
-        onHoveredChange(
-            hoveredX,
-            hoveredTemp,
-            hoveredValues,
-            tooltipX,
-            tooltipY,
-        );
         return true;
     }
 
     function doZoom(svgX: number, svgY: number, factor: number) {
         const tempAtCursor =
-            isLocked && lockedTempInternal !== null
+            localIsLocked && lockedTempInternal !== null
                 ? lockedTempInternal
                 : invScaleX(svgX);
         const pressAtCursor = invScaleY(svgY);
@@ -828,7 +829,6 @@
         hoveredX = null;
         hoveredTemp = null;
         hoveredValues = [];
-        onHoveredChange(null, null, [], 0, 0);
         isPanning = false;
         drawGraph();
     }
@@ -864,7 +864,7 @@
     function handleMouseDown(event: MouseEvent) {
         if (event.button === 1) {
             event.preventDefault();
-            onToggleLock();
+            handleToggleLock();
             drawGraph();
             return;
         }
@@ -883,12 +883,7 @@
                 event.touches[0].clientX,
                 event.touches[0].clientY,
             );
-            if (!doHover(svgX)) {
-                hoveredX = null;
-                hoveredTemp = null;
-                hoveredValues = [];
-                onHoveredChange(null, null, [], 0, 0);
-            }
+            doHover(svgX);
             drawGraph();
         }
     }
@@ -929,14 +924,40 @@
     });
 </script>
 
-<canvas
-    bind:this={canvas}
-    onmousemove={handleMouseMove}
-    onmouseleave={handleMouseLeave}
-    onwheel={handleWheel}
-    onmousedown={handleMouseDown}
-    onmouseup={handleMouseUp}
-    onmouseenter={handleCanvasMouseOver}
-    ontouchmove={handleTouchMove}
-    class:panning={isPanning}
-></canvas>
+<div class="w-full overflow-hidden relative">
+    <canvas
+        bind:this={canvas}
+        onmousemove={handleMouseMove}
+        onmouseleave={handleMouseLeave}
+        onwheel={handleWheel}
+        onmousedown={handleMouseDown}
+        onmouseup={handleMouseUp}
+        onmouseenter={handleCanvasMouseOver}
+        ontouchmove={handleTouchMove}
+        class="w-full h-auto rounded"
+        class:cursor-grab={!isPanning}
+        class:cursor-grabbing={isPanning}
+    ></canvas>
+
+    {#if showMiniLegend}
+        <PhaseDiagramMiniLegend
+            {tc}
+            {visibleGases}
+            {sortedGases}
+            {onToggleGas}
+        />
+    {/if}
+
+    {#if (localIsLocked && lockedTempInternal !== null && lockedValuesInternal.length > 0) || (!localIsLocked && hoveredTemp !== null && hoveredValues.length > 0)}
+        <PhaseDiagramTooltip
+            isLocked={localIsLocked}
+            lockedTemp={localIsLocked ? lockedTempInternal : hoveredTemp}
+            lockedValues={localIsLocked ? lockedValuesInternal : hoveredValues}
+            lockedTooltipX={localIsLocked ? lockedTooltipXInternal : tooltipX}
+            lockedTooltipY={localIsLocked ? lockedTooltipYInternal : tooltipY}
+            tooltipFlipped={localIsLocked ? lockedTooltipFlipped : tooltipFlipped}
+            {theme}
+            {tc}
+        />
+    {/if}
+</div>

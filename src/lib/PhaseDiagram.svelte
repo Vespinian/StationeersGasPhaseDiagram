@@ -1,7 +1,6 @@
 <script lang="ts">
     import { untrack } from "svelte";
     import { gasData, gasTuning, calcPressure } from "$lib/gasData";
-    import "$lib/PhaseDiagram.css";
     import {
         type Theme,
         type SortKey,
@@ -26,6 +25,7 @@
     import PhaseDiagramTooltip from "$lib/components/PhaseDiagramTooltip.svelte";
     import PhaseDiagramLegend from "$lib/components/PhaseDiagramLegend.svelte";
     import PhaseDiagramMiniLegend from "$lib/components/PhaseDiagramMiniLegend.svelte";
+    import PhaseDiagramControls from "$lib/components/PhaseDiagramControls.svelte";
 
     const saved = loadState() as any;
 
@@ -34,6 +34,72 @@
     let logXScale = $state(getSaved(saved, "logXScale", false));
     let invertPanY = $state(getSaved(saved, "invertPanY", true));
     let theme = $state<Theme>(loadTheme());
+
+    const themeColors = $derived.by(() => {
+        switch (theme) {
+            case "light":
+                return {
+                    bg: "#e8e8e8",
+                    text: "#202122",
+                    subtitle: "#666",
+                    controlsBg: "#f2f2f2",
+                    controlsShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                    inputBg: "#f2f2f2",
+                    inputBorder: "#a2a9b1",
+                    inputText: "#202122",
+                    btnBg: "#fff",
+                    btnText: "#202122",
+                    btnBorder: "#a2a9b1",
+                    helpBg: "#fff",
+                    helpBorder: "#a2a9b1",
+                    h3: "#202122",
+                    selectBg: "#fff",
+                    selectText: "#202122",
+                    selectBorder: "#a2a9b1",
+                };
+            case "dark":
+                return {
+                    bg: "#101418",
+                    text: "#c8cde0",
+                    subtitle: "#7a7f98",
+                    controlsBg: "#111",
+                    controlsShadow: "none",
+                    inputBg: "#111",
+                    inputBorder: "#444",
+                    inputText: "#ccc",
+                    btnBg: "#222",
+                    btnText: "#ccc",
+                    btnBorder: "#444",
+                    helpBg: "#111",
+                    helpBorder: "#444",
+                    h3: "#ccc",
+                    selectBg: "#222",
+                    selectText: "#ccc",
+                    selectBorder: "#444",
+                };
+            default:
+                return {
+                    bg: "#1a2233",
+                    text: "#b8c8e0",
+                    subtitle: "#888",
+                    controlsBg: "#1e2a3d",
+                    controlsShadow: "none",
+                    inputBg: "#1e2a3d",
+                    inputBorder: "rgba(100,140,200,0.2)",
+                    inputText: "#b8c8e0",
+                    btnBg: "#25334a",
+                    btnText: "#b8c8e0",
+                    btnBorder: "rgba(100,140,200,0.2)",
+                    helpBg: "#1e2a3d",
+                    helpBorder: "rgba(100,140,200,0.2)",
+                    h3: "#b8c8e0",
+                    selectBg: "#25334a",
+                    selectText: "#b8c8e0",
+                    selectBorder: "rgba(100,140,200,0.2)",
+                };
+        }
+    });
+
     let visibleGases: Record<string, boolean> = $state(
         getSaved(saved, "visibleGases", defaultVisibleGases),
     );
@@ -77,17 +143,6 @@
     let viewPressMin = $state(getSaved(saved, "viewPressMin", 0));
     let viewPressMax = $state(getSaved(saved, "viewPressMax", 6000));
 
-    let hoveredX = $state<number | null>(null);
-    let hoveredTemp = $state<number | null>(null);
-    let hoveredValues = $state<HoverValue[]>([]);
-    let tooltipX = $state(0);
-    let tooltipY = $state(0);
-
-    let lockedX = $state<number | null>(null);
-    let lockedTemp = $state<number | null>(null);
-    let lockedValues = $state<HoverValue[]>([]);
-    let lockedTooltipX = $state(0);
-    let lockedTooltipY = $state(0);
     let isLocked = $state(false);
 
     let graphMoved = $state(
@@ -159,7 +214,7 @@
             logXScale,
             invertPanY,
             isLocked,
-            lockedTemp,
+            null,
             visibleGases,
             viewTempMin,
             viewTempMax,
@@ -227,17 +282,6 @@
             if (e.code === "KeyL" && !e.ctrlKey && !e.metaKey && !e.altKey) {
                 e.preventDefault();
                 isLocked = !isLocked;
-                if (isLocked) {
-                    lockedX = hoveredX;
-                    lockedTemp = hoveredTemp;
-                    lockedValues = [...hoveredValues];
-                    lockedTooltipX = tooltipX;
-                    lockedTooltipY = tooltipY;
-                } else {
-                    lockedX = null;
-                    lockedTemp = null;
-                    lockedValues = [];
-                }
             }
         }
         window.addEventListener("keydown", handleKey);
@@ -257,7 +301,6 @@
         void viewPressMin;
         void viewPressMax;
         void isLocked;
-        void lockedTemp;
         if (initSave) {
             initSave = false;
             saveState(
@@ -266,7 +309,7 @@
                 logXScale,
                 invertPanY,
                 isLocked,
-                lockedTemp,
+                null,
                 visibleGases,
                 viewTempMin,
                 viewTempMax,
@@ -280,7 +323,7 @@
                 logXScale,
                 invertPanY,
                 isLocked,
-                lockedTemp,
+                null,
                 visibleGases,
                 viewTempMin,
                 viewTempMax,
@@ -298,7 +341,7 @@
                 logXScale,
                 invertPanY,
                 isLocked,
-                lockedTemp,
+                null,
                 visibleGases,
                 viewTempMin,
                 viewTempMax,
@@ -314,7 +357,7 @@
                     logXScale,
                     invertPanY,
                     isLocked,
-                    lockedTemp,
+                    null,
                     visibleGases,
                     viewTempMin,
                     viewTempMax,
@@ -328,75 +371,14 @@
 
     $effect(() => {
         if (initLock) return;
-        if (saved && saved.isLocked && typeof saved.lockedTemp === "number") {
-            initSave = false;
+        if (saved && saved.isLocked) {
             isLocked = true;
-            const temp = saved.lockedTemp as number;
-            lockedTemp = temp;
-            const values: HoverValue[] = [];
-            for (const [key, gas] of Object.entries(gasData)) {
-                if (!visibleGases[key]) continue;
-                const p = calcPressure(temp, gas, gasTuning[key]);
-                if (p !== null) {
-                    values.push({ gasKey: key, value: p });
-                }
-            }
-            lockedValues = values;
-            if (lockedTemp !== null) {
-                lockedX = phaseCalculations.scaleX(
-                    lockedTemp,
-                    viewTempMin,
-                    viewTempMax,
-                    { top: 40, right: 40, left: 80, bottom: 60 },
-                    1200 - 80 - 40,
-                    logXScale,
-                );
-            }
         }
         initLock = true;
     });
 
     function toggleLock() {
         isLocked = !isLocked;
-        if (isLocked) {
-            lockedX = hoveredX;
-            lockedTemp = hoveredTemp;
-            lockedValues = [...hoveredValues];
-            lockedTooltipX = tooltipX;
-            lockedTooltipY = tooltipY;
-        } else {
-            lockedX = null;
-            lockedTemp = null;
-            lockedValues = [];
-        }
-    }
-
-    function onHoveredChange(
-        x: number | null,
-        temp: number | null,
-        values: HoverValue[],
-        tx: number,
-        ty: number,
-    ) {
-        hoveredX = x;
-        hoveredTemp = temp;
-        hoveredValues = values;
-        tooltipX = tx;
-        tooltipY = ty;
-    }
-
-    function onLockedChange(
-        x: number | null,
-        temp: number | null,
-        values: HoverValue[],
-        tx: number,
-        ty: number,
-    ) {
-        lockedX = x;
-        lockedTemp = temp;
-        lockedValues = values;
-        lockedTooltipX = tx;
-        lockedTooltipY = ty;
     }
 
     function onGraphMovedChange(moved: boolean) {
@@ -417,164 +399,75 @@
 </script>
 
 <div
-    class="container"
-    class:light-mode={theme === "light"}
-    class:dark-mode={theme === "dark"}
+    class="w-full p-5 font-sans min-h-screen"
+    style:background-color={themeColors.bg}
+    style:color={themeColors.text}
 >
-    <h2>Stationeers Gas Phase Diagram</h2>
-    <p class="subtitle">
+    <h2 class="text-center mb-2.5 text-white max-w-full">
+        Stationeers Gas Phase Diagram
+    </h2>
+    <p class="text-center text-xs mb-5" style:color={themeColors.subtitle}>
         Saturation curves - above line = liquid possible, below = gas only
     </p>
 
-    <div class="controls">
-        <div class="control-row">
-            <label>
-                <input type="checkbox" bind:checked={showGrid} />
-                Grid
-            </label>
-            <label>
-                <input type="checkbox" bind:checked={logScale} />
-                Log Y Scale
-            </label>
-            <label>
-                <input type="checkbox" bind:checked={logXScale} />
-                Log X Scale
-            </label>
-            <label>
-                <input type="checkbox" bind:checked={invertPanY} />
-                Invert Y Pan
-            </label>
-        </div>
-        <div class="control-row">
-            <button onclick={resetView} class="btn">Reset View</button>
-            <button onclick={resetGases} class="btn">Reset Selection</button>
-            <button onclick={clearAllGases} class="btn">Clear All</button>
-            <button onclick={copyShare} class="btn">{shareText}</button>
-            <button
-                onclick={() => (showMiniLegend = !showMiniLegend)}
-                class="btn">{showMiniLegend ? "Hide" : "Show"} Legend</button
-            >
-            <button onclick={() => (showHelp = !showHelp)} class="btn"
-                >[?]</button
-            >
-        </div>
-    </div>
+    <PhaseDiagramControls
+        {theme}
+        {themeColors}
+        {showGrid}
+        {logScale}
+        {logXScale}
+        {invertPanY}
+        {showMiniLegend}
+        {showHelp}
+        {showShareUrl}
+        {shareUrl}
+        {shareText}
+        {urlGenerated}
+        onShowGridChange={(v) => (showGrid = v)}
+        onLogScaleChange={(v) => (logScale = v)}
+        onLogXScaleChange={(v) => (logXScale = v)}
+        onInvertPanYChange={(v) => (invertPanY = v)}
+        onResetView={resetView}
+        onResetGases={resetGases}
+        onClearAllGases={clearAllGases}
+        onCopyShare={copyShare}
+        onToggleMiniLegend={() => (showMiniLegend = !showMiniLegend)}
+        onToggleHelp={() => (showHelp = !showHelp)}
+        onThemeChange={(t) => (theme = t)}
+        onShowShareUrlChange={(v) => {
+            showShareUrl = v;
+            if (!v) shareText = "Share";
+        }}
+    />
 
-    {#if showShareUrl}
-        <div class="share-row">
-            <input
-                type="text"
-                readonly
-                value={shareUrl}
-                class="share-url"
-                class:share-url-glow={urlGenerated}
-                onclick={(e) => (e.target as HTMLInputElement).select()}
-            />
-            <button
-                onclick={() => {
-                    showShareUrl = false;
-                    shareText = "Share";
-                }}
-                class="share-close">×</button
-            >
-        </div>
-    {/if}
-
-    {#if showHelp}
-        <div class="help-tooltip">
-            <h3>Theme</h3>
-            <ul>
-                <li>
-                    <select bind:value={theme} class="theme-select">
-                        <option value="stationeers">Stationeers</option>
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </li>
-            </ul>
-            <h3>Controls</h3>
-            <ul>
-                <li><strong>Scroll wheel</strong> — Zoom both axes</li>
-                <li>
-                    <strong>Ctrl + Scroll</strong> — Zoom X-axis (temperature)
-                </li>
-                <li>
-                    <strong>Shift + Scroll</strong> — Zoom Y-axis (pressure)
-                </li>
-                <li><strong>Click + drag</strong> — Pan the view</li>
-                <li>
-                    <strong>L</strong> or <strong>Middle mouse</strong> — Lock/unlock
-                    cursor at current position
-                </li>
-                <li>
-                    <strong>Click legend row</strong> — Toggle gas visibility
-                </li>
-                <li>
-                    <strong>Click column headers</strong> — Sort the legend table
-                </li>
-                <li>
-                    <strong>Legend button</strong> — Show/hide mini legend on chart
-                </li>
-                <li>
-                    <strong>Share button</strong> — Copy shareable URL to clipboard
-                </li>
-            </ul>
-        </div>
-    {/if}
-
-    <div class="chart-wrapper">
-        {#if showMiniLegend}
-            <PhaseDiagramMiniLegend
-                {visibleGases}
-                {sortedGases}
-                onToggleGas={toggleGas}
-            />
-        {/if}
-
-        <PhaseDiagramCanvas
-            {theme}
-            {showGrid}
-            {logScale}
-            {logXScale}
-            {invertPanY}
-            {visibleGases}
-            {viewTempMin}
-            {viewTempMax}
-            {viewPressMin}
-            {viewPressMax}
-            {isLocked}
-            {lockedTemp}
-            {lockedValues}
-            {lockedX}
-            {lockedTooltipX}
-            {lockedTooltipY}
-            {graphMoved}
-            {onHoveredChange}
-            {onLockedChange}
-            {onGraphMovedChange}
-            {onViewChange}
-            onToggleLock={toggleLock}
-        />
-
-        <PhaseDiagramTooltip
-            {isLocked}
-            {lockedTemp}
-            {lockedValues}
-            {lockedTooltipX}
-            {lockedTooltipY}
-            {hoveredTemp}
-            {hoveredValues}
-            {tooltipX}
-            {tooltipY}
-            {theme}
-        />
-    </div>
+    <PhaseDiagramCanvas
+        {theme}
+        {themeColors}
+        {showGrid}
+        {logScale}
+        {logXScale}
+        {invertPanY}
+        {visibleGases}
+        {viewTempMin}
+        {viewTempMax}
+        {viewPressMin}
+        {viewPressMax}
+        {isLocked}
+        {graphMoved}
+        {showMiniLegend}
+        {sortedGases}
+        onToggleGas={toggleGas}
+        {onGraphMovedChange}
+        {onViewChange}
+        onToggleLock={toggleLock}
+    />
 
     <PhaseDiagramLegend
         {visibleGases}
         {sortKey}
         {sortAsc}
         {theme}
+        {themeColors}
         {sortedGases}
         onSort={handleSort}
         onToggleGas={toggleGas}
