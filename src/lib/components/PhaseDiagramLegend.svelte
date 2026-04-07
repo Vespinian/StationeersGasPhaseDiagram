@@ -67,11 +67,11 @@
 </script>
 
 <div class="overflow-x-auto">
-    <table class="w-full max-w-350 mx-auto mt-5 border-collapse text-sm">
+    <table class="w-full max-w-350 mx-auto mt-5 border-collapse text-sm align-">
         <thead>
             <tr>
                 <th
-                    class="text-left p-2 pb-3 font-semibold border-b-2"
+                    class="text-left p-2 pb-3 font-semibold border-b-2 min-w-25"
                     style:border-color={$themeColors.btnBorder}
                     style:color={$themeColors.text}>Gas</th
                 >
@@ -178,7 +178,7 @@
                         <td
                             class="p-1.5 border-b"
                             style:border-color={$themeColors.btnBorder}
-                            >{gas.meltK} K ({kToC(gas.meltK)} °C)</td
+                            >{Math.round(gas.meltK)} K ({kToC(gas.meltK)} °C)</td
                         >
                         <td
                             class="p-1.5 border-b"
@@ -188,7 +188,7 @@
                         <td
                             class="p-1.5 border-b"
                             style:border-color={$themeColors.btnBorder}
-                            >{gas.maxLiqK} K ({kToC(gas.maxLiqK)} °C)</td
+                            >{Math.round(gas.maxLiqK)} K ({kToC(gas.maxLiqK)} °C)</td
                         >
                         <td
                             class="p-1.5 border-b"
