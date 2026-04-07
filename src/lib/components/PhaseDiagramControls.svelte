@@ -203,7 +203,7 @@
 
 {#if showHelp}
     <div
-        class="max-w-[400px] mx-auto mb-[15px] rounded-lg p-5 text-sm leading-relaxed"
+        class="max-w-100 mx-auto mb-3.75 rounded-lg p-5 text-sm leading-relaxed"
         style:background-color={themeColors.helpBg}
         style:border="1px solid {themeColors.helpBorder}"
         style:box-shadow={theme === "light"

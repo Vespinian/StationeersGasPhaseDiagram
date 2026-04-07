@@ -1,6 +1,12 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { gasData, gasTuning, calcPressure, kToC, type GasData } from "$lib/gasData";
+    import {
+        gasData,
+        gasTuning,
+        calcPressure,
+        kToC,
+        type GasData,
+    } from "$lib/gasData";
     import * as phaseCalculations from "$lib/phaseCalculations";
     import {
         type Theme,
@@ -65,7 +71,6 @@
         isLocked,
         showMiniLegend,
         sortedGases,
-        graphMoved,
         onToggleGas,
         onGraphMovedChange,
         onViewChange,
@@ -117,15 +122,15 @@
 
     function handleToggleLock() {
         localIsLocked = !localIsLocked;
-        if (localIsLocked && hoveredTemp !== null) {
+        if (localIsLocked && hoveredTemp !== null && hoveredX !== null) {
             lockedTempInternal = hoveredTemp;
             lockedValuesInternal = [...hoveredValues];
             lockedXInternal = hoveredX;
             const tooltipWidth = 200;
             const flipThreshold = canvasWidth - tooltipWidth - 15;
             lockedTooltipFlipped = hoveredX > flipThreshold;
-            lockedTooltipXInternal = lockedTooltipFlipped 
-                ? hoveredX - tooltipWidth - 15 
+            lockedTooltipXInternal = lockedTooltipFlipped
+                ? hoveredX - tooltipWidth - 15
                 : hoveredX + 15;
             lockedTooltipYInternal = Math.max(margin.top, 50);
         } else {
@@ -355,8 +360,12 @@
         }
 
         const displayX =
-            localIsLocked && lockedXInternal !== null ? lockedXInternal : hoveredX;
-        const displayValues = localIsLocked ? lockedValuesInternal : hoveredValues;
+            localIsLocked && lockedXInternal !== null
+                ? lockedXInternal
+                : hoveredX;
+        const displayValues = localIsLocked
+            ? lockedValuesInternal
+            : hoveredValues;
 
         if (displayX !== null && displayValues.length > 0) {
             ctx.strokeStyle = t.hoverLine;
@@ -489,8 +498,8 @@
             const tooltipWidth = 200;
             const flipThreshold = canvasWidth - tooltipWidth - 85;
             lockedTooltipFlipped = lockedXInternal > flipThreshold;
-            lockedTooltipXInternal = lockedTooltipFlipped 
-                ? lockedXInternal - tooltipWidth - 15 
+            lockedTooltipXInternal = lockedTooltipFlipped
+                ? lockedXInternal - tooltipWidth - 15
                 : Math.max(85, lockedXInternal + 85);
             lockedTooltipYInternal = Math.max(margin.top, 50);
         }
@@ -955,7 +964,9 @@
             lockedValues={localIsLocked ? lockedValuesInternal : hoveredValues}
             lockedTooltipX={localIsLocked ? lockedTooltipXInternal : tooltipX}
             lockedTooltipY={localIsLocked ? lockedTooltipYInternal : tooltipY}
-            tooltipFlipped={localIsLocked ? lockedTooltipFlipped : tooltipFlipped}
+            tooltipFlipped={localIsLocked
+                ? lockedTooltipFlipped
+                : tooltipFlipped}
             {theme}
             {tc}
         />

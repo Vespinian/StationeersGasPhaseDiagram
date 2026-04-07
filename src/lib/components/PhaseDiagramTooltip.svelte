@@ -37,7 +37,7 @@
 
 {#if displayTemp !== null && displayValues.length > 0}
     <div
-        class="absolute rounded p-2 pointer-events-none min-w-40 max-w-[200px] z-10 box-border"
+        class="absolute rounded p-2 pointer-events-none min-w-40 max-w-50 z-10 box-border"
         style:left="{lockedTooltipX}px"
         style:top="{lockedTooltipY}px"
         style:background-color={tc.btnBg}
@@ -58,10 +58,14 @@
             >
                 <span
                     class="w-2 h-2 rounded-full inline-block"
-                    style:background={phaseCalculations.getGasLabelColor(g, theme)}
+                    style:background={phaseCalculations.getGasLabelColor(
+                        g,
+                        theme,
+                    )}
                 ></span>
                 {g.symbol}: {Math.round(value)} kPa
             </div>
         {/each}
     </div>
 {/if}
+

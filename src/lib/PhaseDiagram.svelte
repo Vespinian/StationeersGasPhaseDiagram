@@ -1,10 +1,9 @@
 <script lang="ts">
     import { untrack } from "svelte";
-    import { gasData, gasTuning, calcPressure } from "$lib/gasData";
+    import { gasData } from "$lib/gasData";
     import {
         type Theme,
         type SortKey,
-        type HoverValue,
         loadState,
         loadTheme,
         loadShowMiniLegend,
@@ -20,11 +19,8 @@
         shareUrl,
         sortedGasData,
     } from "$lib/stores/graphState";
-    import * as phaseCalculations from "$lib/phaseCalculations";
     import PhaseDiagramCanvas from "$lib/components/PhaseDiagramCanvas.svelte";
-    import PhaseDiagramTooltip from "$lib/components/PhaseDiagramTooltip.svelte";
     import PhaseDiagramLegend from "$lib/components/PhaseDiagramLegend.svelte";
-    import PhaseDiagramMiniLegend from "$lib/components/PhaseDiagramMiniLegend.svelte";
     import PhaseDiagramControls from "$lib/components/PhaseDiagramControls.svelte";
 
     const saved = loadState() as any;
