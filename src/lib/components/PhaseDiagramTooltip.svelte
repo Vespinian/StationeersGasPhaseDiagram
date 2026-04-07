@@ -20,7 +20,6 @@
         lockedValues,
         lockedTooltipX,
         lockedTooltipY,
-        tooltipFlipped,
     }: Props = $props();
 
     const displayTemp = $derived(lockedTemp);
@@ -34,12 +33,11 @@
         style:top="{lockedTooltipY}px"
         style:background-color={$themeColors.btnBg}
         style:border="1px solid {$themeColors.btnBorder}"
-        style:transform={tooltipFlipped ? "translateX(-100%)" : "none"}
     >
         <div class="text-xs font-bold mb-1" style:color={$themeColors.btnText}>
             {displayTemp}K ({kToC(displayTemp)}°C)
             {#if isLocked}
-                <span class="ml-1.5 text-[11px]">🔒</span>
+                <span class="ml-1.5 text-xs]">🔒</span>
             {/if}
         </div>
         {#each displayValues as { gasKey, value } (gasKey)}
@@ -60,4 +58,3 @@
         {/each}
     </div>
 {/if}
-

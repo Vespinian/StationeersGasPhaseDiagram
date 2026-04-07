@@ -140,7 +140,8 @@
             class="px-1 py-0.5 rounded cursor-pointer text-sm"
             style:background-color={$themeColors.btnBg}
             style:color={$themeColors.btnText}
-            style:border="1px solid {$themeColors.btnBorder}">{shareText}</button
+            style:border="1px solid {$themeColors.btnBorder}"
+            >{shareText}</button
         >
         <button
             onclick={onToggleMiniLegend}

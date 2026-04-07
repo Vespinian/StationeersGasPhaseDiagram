@@ -19,7 +19,7 @@
         HARD_LOG_PRESSURE_MIN,
         HARD_LOG_PRESSURE_MAX,
     } from "$lib/stores/graphState";
-    import { defaultThemeColors, theme, themeColors } from "$lib/themeDefaults";
+    import { theme, themeColors } from "$lib/themeDefaults";
     import PhaseDiagramTooltip from "$lib/components/PhaseDiagramTooltip.svelte";
     import PhaseDiagramMiniLegend from "$lib/components/PhaseDiagramMiniLegend.svelte";
 
@@ -675,7 +675,7 @@
         const tooltipWidth = 200;
         const flipThreshold = canvasWidth - tooltipWidth - 15;
         tooltipFlipped = svgX > flipThreshold;
-        tooltipX = tooltipFlipped ? svgX - tooltipWidth - 15 : svgX + 15;
+        tooltipX = tooltipFlipped ? svgX - tooltipWidth + 20 : svgX + 15;
         tooltipY = Math.max(margin.top, 50);
         return true;
     }
@@ -920,7 +920,7 @@
     });
 </script>
 
-<div class="w-full overflow-hidden relative">
+<div class="w-full overflow-x-auto relative">
     <canvas
         bind:this={canvas}
         onmousemove={handleMouseMove}
@@ -936,11 +936,7 @@
     ></canvas>
 
     {#if showMiniLegend}
-        <PhaseDiagramMiniLegend
-            {visibleGases}
-            {sortedGases}
-            {onToggleGas}
-        />
+        <PhaseDiagramMiniLegend {visibleGases} {sortedGases} {onToggleGas} />
     {/if}
 
     {#if (localIsLocked && lockedTempInternal !== null && lockedValuesInternal.length > 0) || (!localIsLocked && hoveredTemp !== null && hoveredValues.length > 0)}

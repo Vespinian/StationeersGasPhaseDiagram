@@ -47,13 +47,13 @@
 </script>
 
 <div
-    class="absolute top-1/2 -translate-y-1/2 right-10 grid grid-cols-2 gap-1 z-20 p-2 rounded border"
+    class="absolute top-1/2 -translate-y-1/2 right-12 grid grid-cols-2 gap-1 p-1 rounded border"
     style:background-color={$themeColors.btnBg}
     style:border-color={$themeColors.btnBorder}
 >
     {#each sortedGases as [key, gas] (key)}
         <div
-            class="w-8 h-8 p-0.5 cursor-pointer rounded flex items-center justify-center transition-opacity touch-manipulation"
+            class="w-9 h-9 cursor-pointer rounded flex items-center justify-center transition-opacity touch-manipulation"
             class:opacity-30={!visibleGases[key]}
             onclick={() => onToggleGas(key)}
             onkeydown={(e) => {
