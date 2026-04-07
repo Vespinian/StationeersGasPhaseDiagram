@@ -1,4 +1,6 @@
 import { gasData, type GasData } from '$lib/gasData';
+import * as phaseCalculations from '$lib/phaseCalculations';
+import { getContext, hasContext } from 'svelte';
 
 export type SortKey =
     | 'symbol'
@@ -11,6 +13,39 @@ export type SortKey =
     | 'latentHeat';
 
 export type Theme = 'stationeers' | 'light' | 'dark';
+
+export const THEME_CONTEXT_KEY = Symbol('theme-context');
+
+export interface ThemeContextValue {
+    theme: Theme;
+    themeColors: ReturnType<typeof phaseCalculations.getThemeColors> & {
+        text: string;
+        subtitle: string;
+        btnBg: string;
+        btnText: string;
+        btnBorder: string;
+        controlsBg: string;
+        controlsShadow: string;
+        inputBg: string;
+        inputBorder: string;
+        inputText: string;
+        helpBg: string;
+        helpBorder: string;
+        h3: string;
+        selectBg: string;
+        selectText: string;
+        selectBorder: string;
+        bg: string;
+    };
+}
+
+export function getThemeContext(): ThemeContextValue | undefined {
+    return getContext(THEME_CONTEXT_KEY);
+}
+
+export function hasThemeContext(): boolean {
+    return hasContext(THEME_CONTEXT_KEY);
+}
 
 export interface SavedState {
     showGrid?: boolean;

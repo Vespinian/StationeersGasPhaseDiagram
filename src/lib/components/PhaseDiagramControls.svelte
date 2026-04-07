@@ -1,5 +1,10 @@
 <script lang="ts">
     import type { Theme } from "$lib/stores/graphState";
+    import { getThemeContext } from "$lib/stores/graphState";
+    import { defaultThemeColors, defaultTheme } from "$lib/themeDefaults";
+
+    const ctx = getThemeContext();
+    const themeColors = $derived(ctx?.themeColors ?? defaultThemeColors.stationeers);
 
     interface Props {
         showGrid: boolean;
@@ -8,25 +13,6 @@
         invertPanY: boolean;
         showMiniLegend: boolean;
         showHelp: boolean;
-        theme: Theme;
-        themeColors: {
-            text: string;
-            subtitle: string;
-            controlsBg: string;
-            controlsShadow: string;
-            inputBg: string;
-            inputBorder: string;
-            inputText: string;
-            btnBg: string;
-            btnText: string;
-            btnBorder: string;
-            helpBg: string;
-            helpBorder: string;
-            h3: string;
-            selectBg: string;
-            selectText: string;
-            selectBorder: string;
-        };
         showShareUrl: boolean;
         shareUrl: string;
         shareText: string;
@@ -52,8 +38,6 @@
         invertPanY,
         showMiniLegend,
         showHelp,
-        theme,
-        themeColors,
         showShareUrl,
         shareUrl,
         shareText,
@@ -71,6 +55,8 @@
         onThemeChange,
         onShowShareUrlChange,
     }: Props = $props();
+
+    const theme = $derived(ctx?.theme ?? defaultTheme);
 
     function handleShowGridChange(e: Event) {
         const target = e.target as HTMLInputElement;

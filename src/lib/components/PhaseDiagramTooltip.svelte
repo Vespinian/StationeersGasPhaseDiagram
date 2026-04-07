@@ -2,7 +2,13 @@
     import { kToC } from "$lib/gasData";
     import * as phaseCalculations from "$lib/phaseCalculations";
     import { gasData } from "$lib/gasData";
-    import type { Theme, HoverValue } from "$lib/stores/graphState";
+    import type { HoverValue, Theme } from "$lib/stores/graphState";
+    import { getThemeContext } from "$lib/stores/graphState";
+    import { defaultThemeColors, defaultTheme } from "$lib/themeDefaults";
+
+    const ctx = getThemeContext();
+    const theme = $derived<Theme>(ctx?.theme ?? defaultTheme);
+    const tc = $derived(ctx?.themeColors ?? defaultThemeColors.stationeers);
 
     interface Props {
         isLocked: boolean;
@@ -11,13 +17,6 @@
         lockedTooltipX: number;
         lockedTooltipY: number;
         tooltipFlipped: boolean;
-        theme: Theme;
-        tc: {
-            btnBg: string;
-            btnBorder: string;
-            text: string;
-            btnText: string;
-        };
     }
 
     let {
@@ -27,8 +26,6 @@
         lockedTooltipX,
         lockedTooltipY,
         tooltipFlipped,
-        theme,
-        tc,
     }: Props = $props();
 
     const displayTemp = $derived(lockedTemp);

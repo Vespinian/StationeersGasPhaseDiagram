@@ -9,8 +9,8 @@
     } from "$lib/gasData";
     import * as phaseCalculations from "$lib/phaseCalculations";
     import {
-        type Theme,
         type HoverValue,
+        getThemeContext,
         HARD_TEMP_MIN,
         HARD_TEMP_MAX,
         HARD_LOG_TEMP_MIN,
@@ -20,18 +20,15 @@
         HARD_LOG_PRESSURE_MIN,
         HARD_LOG_PRESSURE_MAX,
     } from "$lib/stores/graphState";
+    import { defaultThemeColors, defaultTheme } from "$lib/themeDefaults";
     import PhaseDiagramTooltip from "$lib/components/PhaseDiagramTooltip.svelte";
     import PhaseDiagramMiniLegend from "$lib/components/PhaseDiagramMiniLegend.svelte";
 
+    const ctx = getThemeContext();
+    const theme = $derived(ctx?.theme ?? defaultTheme);
+    const tc = $derived(ctx?.themeColors ?? defaultThemeColors.stationeers);
+
     interface Props {
-        theme: Theme;
-        themeColors: {
-            text: string;
-            subtitle: string;
-            btnBg: string;
-            btnText: string;
-            btnBorder: string;
-        };
         showGrid: boolean;
         logScale: boolean;
         logXScale: boolean;
@@ -57,8 +54,6 @@
     }
 
     let {
-        theme,
-        themeColors: tc,
         showGrid,
         logScale,
         logXScale,
@@ -194,8 +189,6 @@
         );
     }
 
-    const themeColors = $derived(getThemeColors(theme));
-
     const gasColors = $derived.by(() => {
         const colors: Record<string, { color: string; labelColor: string }> =
             {};
@@ -226,7 +219,7 @@
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
-        const t = themeColors;
+        const t = tc;
 
         const xTicks = logXScale
             ? generateLogTicks(viewTempMin, viewTempMax)
@@ -950,7 +943,6 @@
 
     {#if showMiniLegend}
         <PhaseDiagramMiniLegend
-            {tc}
             {visibleGases}
             {sortedGases}
             {onToggleGas}
@@ -967,8 +959,6 @@
             tooltipFlipped={localIsLocked
                 ? lockedTooltipFlipped
                 : tooltipFlipped}
-            {theme}
-            {tc}
         />
     {/if}
 </div>

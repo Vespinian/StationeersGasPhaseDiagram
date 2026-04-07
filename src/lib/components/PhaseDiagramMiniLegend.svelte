@@ -1,5 +1,7 @@
 <script lang="ts">
     import type { GasData } from "$lib/gasData";
+    import { getThemeContext } from "$lib/stores/graphState";
+    import { defaultThemeColors } from "$lib/themeDefaults";
     import oxygenIcon from "$lib/icons/oxygen.png";
     import nitrogenIcon from "$lib/icons/nitrogen.png";
     import pollutantIcon from "$lib/icons/pollutant.png";
@@ -16,6 +18,9 @@
     import sodiumchlorideIcon from "$lib/icons/sodiumchloride.png";
     import hydrochloricacidIcon from "$lib/icons/hydrochloricacid.png";
     import hydrazineIcon from "$lib/icons/hydrazine.png";
+
+    const ctx = getThemeContext();
+    const tc = $derived(ctx?.themeColors ?? defaultThemeColors.stationeers);
 
     const gasIcons: Record<string, string> = {
         N2: nitrogenIcon,
@@ -39,14 +44,10 @@
     interface Props {
         visibleGases: Record<string, boolean>;
         sortedGases: [string, GasData][];
-        tc: {
-            btnBg: string;
-            btnBorder: string;
-        };
         onToggleGas: (key: string) => void;
     }
 
-    let { visibleGases, sortedGases, tc, onToggleGas }: Props = $props();
+    let { visibleGases, sortedGases, onToggleGas }: Props = $props();
 </script>
 
 <div

@@ -2,6 +2,8 @@
     import { kToC, formatP, type GasData } from "$lib/gasData";
     import * as phaseCalculations from "$lib/phaseCalculations";
     import type { SortKey, Theme } from "$lib/stores/graphState";
+    import { getThemeContext } from "$lib/stores/graphState";
+    import { defaultThemeColors, defaultTheme } from "$lib/themeDefaults";
     import oxygenIcon from "$lib/icons/oxygen.png";
     import nitrogenIcon from "$lib/icons/nitrogen.png";
     import pollutantIcon from "$lib/icons/pollutant.png";
@@ -18,6 +20,9 @@
     import sodiumchlorideIcon from "$lib/icons/sodiumchloride.png";
     import hydrochloricacidIcon from "$lib/icons/hydrochloricacid.png";
     import hydrazineIcon from "$lib/icons/hydrazine.png";
+
+    const ctx = getThemeContext();
+    const themeColors = $derived(ctx?.themeColors ?? defaultThemeColors.stationeers);
 
     const gasIcons: Record<string, string> = {
         N2: nitrogenIcon,
@@ -42,14 +47,6 @@
         visibleGases: Record<string, boolean>;
         sortKey: SortKey;
         sortAsc: boolean;
-        theme: Theme;
-        themeColors: {
-            text: string;
-            subtitle: string;
-            btnBg: string;
-            btnText: string;
-            btnBorder: string;
-        };
         sortedGases: [string, GasData][];
         onSort: (key: SortKey) => void;
         onToggleGas: (key: string) => void;
@@ -59,12 +56,12 @@
         visibleGases,
         sortKey,
         sortAsc,
-        theme,
-        themeColors,
         sortedGases,
         onSort,
         onToggleGas,
     }: Props = $props();
+
+    const theme = $derived<Theme>(ctx?.theme ?? defaultTheme);
 
     function handleSort(key: SortKey) {
         onSort(key);
