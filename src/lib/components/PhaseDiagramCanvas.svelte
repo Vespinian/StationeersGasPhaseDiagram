@@ -305,6 +305,21 @@
             const tuning = gasTuning[key];
             const color = gasColors[key];
 
+            if (
+                Math.ceil(gas.meltK) >= viewTempMin &&
+                Math.ceil(gas.meltK) < viewTempMax
+            ) {
+                // draw freeze line
+                ctx.strokeStyle = color.color;
+                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(scaleX(gas.meltK), margin.top);
+                ctx.lineTo(scaleX(gas.meltK), margin.top + plotHeight());
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
             let started = false;
             for (
                 let t = Math.max(Math.ceil(gas.meltK), Math.ceil(viewTempMin));
