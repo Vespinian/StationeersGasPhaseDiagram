@@ -39,8 +39,8 @@ export const gasData: Record<string, GasData> = {
     ALC: { name: 'Alcohol', symbol: 'ALC', color: '#CD853F', labelColor: '#CD853F', meltK: 231.63, maxLiqK: 423.68, minCondKPa: 6.3, maxKPa: 1000, specificHeat: 33.0, latentHeat: 2000 },
     He: { name: 'Helium', symbol: 'He', color: '#cccccc', labelColor: '#cccccc', meltK: 0.95, maxLiqK: 5.2, minCondKPa: 0.0, maxKPa: 228, specificHeat: 20.8, latentHeat: 0 },
     NaCl: { name: 'Sodium Chloride', symbol: 'NaCl', color: '#aaaaaa', labelColor: '#aaaaaa', meltK: 605.90, maxLiqK: 2799.31, minCondKPa: 6.3, maxKPa: 515, specificHeat: 130.0, latentHeat: 16000 },
-    SiOH: { name: 'Silanol', symbol: 'SiOH', color: '#00ffcc', labelColor: '#00ffcc', meltK: 163.69, maxLiqK: 821.67, minCondKPa: 516, maxKPa: 6000, specificHeat: 101.0, latentHeat: 10000 },
-    HCl: { name: 'Hydrochloric Acid', symbol: 'HCl', color: '#88ff88', labelColor: '#88ff88', meltK: 247.29, maxLiqK: 431.32, minCondKPa: 6.3, maxKPa: 1000, specificHeat: 37.0, latentHeat: 1000 },
+    SiOH: { name: 'Silanol', symbol: 'SiOH', color: '#876C36', labelColor: '#876C36', meltK: 163.69, maxLiqK: 821.67, minCondKPa: 516, maxKPa: 6000, specificHeat: 101.0, latentHeat: 10000 },
+    HCl: { name: 'Hydrochloric Acid', symbol: 'HCl', color: '#0AAA40', labelColor: '#0AAA40', meltK: 247.29, maxLiqK: 431.32, minCondKPa: 6.3, maxKPa: 1000, specificHeat: 37.0, latentHeat: 1000 },
     O3: { name: 'Ozone', symbol: 'O₃', color: '#dd88ff', labelColor: '#dd88ff', meltK: 81.41, maxLiqK: 304.39, minCondKPa: 250, maxKPa: 6000, specificHeat: 38.6, latentHeat: 1000 },
     PWa: { name: 'Polluted Water', symbol: 'PWa', color: '#44aaaa', labelColor: '#44aaaa', meltK: 276.80, maxLiqK: 634.37, minCondKPa: 6.3, maxKPa: 6000, specificHeat: 72.0, latentHeat: 8000 },
 };

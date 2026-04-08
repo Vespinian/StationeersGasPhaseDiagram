@@ -339,7 +339,7 @@
 </script>
 
 <div
-    class="w-full p-5 font-sans"
+    class="w-full p-5 font-sans min-h-screen"
     style:background-color={themeColors.bg}
     style:color={themeColors.text}
 >

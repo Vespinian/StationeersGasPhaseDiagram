@@ -150,6 +150,6 @@ export const defaultTheme = 'stationeers';
 
 export const theme = writable<ThemeKey>(defaultTheme);
 
-export const themeColors = derived(theme, ($theme) => 
+export const themeColors = derived(theme, ($theme) =>
     defaultThemeColors[$theme] ?? defaultThemeColors.stationeers
 );

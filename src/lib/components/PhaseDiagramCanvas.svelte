@@ -83,7 +83,7 @@
     const tooltipOffsetLarge = 60;
 
     let canvas: HTMLCanvasElement;
-    let canvasWidth = $state(1200);
+    let canvasWidth = $state(1600);
     let canvasHeight = $state(700);
     let dpr = $state(1);
 
@@ -464,7 +464,7 @@
         if (!canvas) return;
         const rect = canvas.parentElement!.getBoundingClientRect();
         dpr = window.devicePixelRatio || 1;
-        canvasWidth = Math.min(1200, rect.width);
+        canvasWidth = Math.min(1600, rect.width);
         canvasHeight = Math.max(400, Math.min(700, rect.height));
         canvas.width = canvasWidth * dpr;
         canvas.height = canvasHeight * dpr;
@@ -932,7 +932,7 @@
     });
 </script>
 
-<div class="relative max-w-300 mx-auto">
+<div class="relative max-w-400 mx-auto">
     <canvas
         bind:this={canvas}
         onmousemove={handleMouseMove}

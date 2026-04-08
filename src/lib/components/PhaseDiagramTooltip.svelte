@@ -31,10 +31,10 @@
         class="absolute rounded p-2 pointer-events-none w-40 z-10 box-border"
         style:left="{lockedTooltipX}px"
         style:top="{lockedTooltipY}px"
-        style:background-color={$themeColors.btnBg}
-        style:border="1px solid {$themeColors.btnBorder}"
+        style:background-color={$themeColors.tooltipBg}
+        style:border="1px solid {$themeColors.tooltipBorder}"
     >
-        <div class="text-xs font-bold mb-1" style:color={$themeColors.btnText}>
+        <div class="font-bold mb-1" style:color={$themeColors.tooltipText}>
             {displayTemp}K ({kToC(displayTemp)}°C)
             {#if isLocked}
                 <span class="ml-1.5 text-xs]">🔒</span>
@@ -43,14 +43,14 @@
         {#each displayValues as { gasKey, value } (gasKey)}
             {@const g = gasData[gasKey]}
             <div
-                class="text-xs flex items-center gap-1.5"
+                class="font-bold flex items-center gap-1.5"
                 style:color={graphHelpers.getGasLabelColor(g, $theme)}
             >
                 <span
                     class="w-2 h-2 rounded-full inline-block"
                     style:background={graphHelpers.getGasLabelColor(g, $theme)}
                 ></span>
-                {g.symbol}: {Math.round(value)} kPa
+                {g.symbol} : {Math.round(value)} kPa
             </div>
         {/each}
     </div>
