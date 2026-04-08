@@ -75,7 +75,7 @@
 
 <div class="flex justify-center">
     <div
-        class="inline-flex flex-col gap-2.5 mb-5 justify-center p-2.5 rounded-lg mx-auto flex-wrap"
+        class="inline-flex flex-col mb-2 gap-2.5 justify-center p-2 rounded-lg flex-wrap"
         style:background-color={$themeColors.controlsBg}
         style:box-shadow={$themeColors.controlsShadow}
     >
@@ -166,7 +166,7 @@
 </div>
 
 {#if showShareUrl}
-    <div class="flex justify-center items-center gap-2 mb-3.75">
+    <div class="flex justify-center items-center gap-2 mb-1">
         <input
             type="text"
             readonly
@@ -188,7 +188,7 @@
 
 {#if showHelp}
     <div
-        class="max-w-100 mx-auto mb-3.75 rounded-lg p-5 text-sm leading-relaxed"
+        class="max-w-100 mx-auto mb-1 rounded-lg p-5 text-sm leading-relaxed"
         style:background-color={$themeColors.helpBg}
         style:border="1px solid {$themeColors.helpBorder}"
         style:box-shadow={$theme === "light"

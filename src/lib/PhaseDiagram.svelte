@@ -343,7 +343,10 @@
     style:background-color={themeColors.bg}
     style:color={themeColors.text}
 >
-    <h2 class="text-center mb-2.5 max-w-full" style:color={themeColors.text}>
+    <h2
+        class="text-center mb-2.5 max-w-full text-2xl font-bold"
+        style:color={themeColors.text}
+    >
         Stationeers Gas Phase Diagram
     </h2>
     <p class="text-center text-xs mb-5" style:color={themeColors.subtitle}>

@@ -78,6 +78,9 @@
     } = graphHelpers;
 
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
+    const tooltipWidth = 160;
+    const tooltipOffsetSmall = 15;
+    const tooltipOffsetLarge = 60;
 
     let canvas: HTMLCanvasElement;
     let canvasWidth = $state(1200);
@@ -115,12 +118,12 @@
             lockedTempInternal = hoveredTemp;
             lockedValuesInternal = [...hoveredValues];
             lockedXInternal = hoveredX;
-            const tooltipWidth = 200;
-            const flipThreshold = canvasWidth - tooltipWidth - 15;
+            const flipThreshold =
+                canvasWidth - tooltipWidth - tooltipOffsetLarge;
             lockedTooltipFlipped = hoveredX > flipThreshold;
             lockedTooltipXInternal = lockedTooltipFlipped
-                ? hoveredX - tooltipWidth - 15
-                : hoveredX + 15;
+                ? hoveredX - tooltipWidth - tooltipOffsetSmall
+                : hoveredX + tooltipOffsetSmall;
             lockedTooltipYInternal = Math.max(margin.top, 50);
         } else {
             lockedTempInternal = null;
@@ -461,8 +464,8 @@
         if (!canvas) return;
         const rect = canvas.parentElement!.getBoundingClientRect();
         dpr = window.devicePixelRatio || 1;
-        canvasWidth = Math.max(600, rect.width);
-        canvasHeight = Math.max(400, Math.min(700, window.innerHeight * 0.6));
+        canvasWidth = Math.min(1200, rect.width);
+        canvasHeight = Math.max(400, Math.min(700, rect.height));
         canvas.width = canvasWidth * dpr;
         canvas.height = canvasHeight * dpr;
         canvas.style.width = `${canvasWidth}px`;
@@ -482,12 +485,12 @@
                 }
             }
             lockedValuesInternal = values;
-            const tooltipWidth = 200;
-            const flipThreshold = canvasWidth - tooltipWidth - 85;
+            const flipThreshold =
+                canvasWidth - tooltipWidth - tooltipOffsetLarge;
             lockedTooltipFlipped = lockedXInternal > flipThreshold;
             lockedTooltipXInternal = lockedTooltipFlipped
-                ? lockedXInternal - tooltipWidth - 15
-                : Math.max(85, lockedXInternal + 85);
+                ? lockedXInternal - tooltipWidth - tooltipOffsetSmall
+                : lockedXInternal + tooltipOffsetSmall;
             lockedTooltipYInternal = Math.max(margin.top, 50);
         }
     }
@@ -510,10 +513,12 @@
             }
             hoveredValues = values;
 
-            const tooltipWidth = 200;
-            const flipThreshold = canvasWidth - tooltipWidth - 15;
+            const flipThreshold =
+                canvasWidth - tooltipWidth - tooltipOffsetLarge;
             tooltipFlipped = svgX > flipThreshold;
-            tooltipX = tooltipFlipped ? svgX - tooltipWidth - 15 : svgX + 15;
+            tooltipX = tooltipFlipped
+                ? svgX - tooltipWidth - tooltipOffsetSmall
+                : svgX + tooltipOffsetSmall;
             tooltipY = Math.max(margin.top, 50);
         } else {
             hoveredX = null;
@@ -672,10 +677,11 @@
             }
         }
         hoveredValues = values;
-        const tooltipWidth = 200;
-        const flipThreshold = canvasWidth - tooltipWidth - 15;
+        const flipThreshold = canvasWidth - tooltipWidth - tooltipOffsetLarge;
         tooltipFlipped = svgX > flipThreshold;
-        tooltipX = tooltipFlipped ? svgX - tooltipWidth + 20 : svgX + 15;
+        tooltipX = tooltipFlipped
+            ? svgX - tooltipWidth - 15
+            : svgX + tooltipOffsetSmall;
         tooltipY = Math.max(margin.top, 50);
         return true;
     }
@@ -926,7 +932,7 @@
     });
 </script>
 
-<div class="w-full overflow-x-auto">
+<div class="relative max-w-300 mx-auto">
     <canvas
         bind:this={canvas}
         onmousemove={handleMouseMove}
