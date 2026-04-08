@@ -57,7 +57,7 @@ export const defaultThemeColors: Record<ThemeKey, ThemeColors> = {
         tooltipBorder: 'rgba(100,140,200,0.2)',
         tooltipText: '#b8c8e0',
         tooltipHeader: '#d0e0f0',
-        text: '#b8c8e0',
+        text: '#fff',
         subtitle: '#888',
         controlsBg: '#1e2a3d',
         controlsShadow: 'none',

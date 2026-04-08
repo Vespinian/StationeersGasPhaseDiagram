@@ -84,12 +84,12 @@
 
 <div class="flex justify-center">
     <div
-        class="inline-flex flex-col mb-2 gap-2.5 justify-center p-2 rounded-lg flex-wrap"
+        class="inline-flex flex-col mb-2 gap-2.5 justify-center p-3 rounded-lg flex-wrap"
         style:background-color={$themeColors.controlsBg}
         style:box-shadow={$themeColors.controlsShadow}
     >
         <div class="flex gap-2 md:gap-5 justify-center flex-wrap">
-            <label class="flex items-center gap-1.5 cursor-pointer">
+            <label class="flex items-center gap-2.5 cursor-pointer">
                 <input
                     type="checkbox"
                     checked={showGrid}
@@ -133,7 +133,7 @@
         <div class="flex gap-2 md:gap-5 justify-center flex-wrap">
             <button
                 onclick={onResetView}
-                class="px-1 py-0.5 rounded cursor-pointer text-sm"
+                class="px-4 py-1.25 rounded cursor-pointer text-sm"
                 style:background-color={$themeColors.btnBg}
                 style:color={$themeColors.btnText}
                 style:border="1px solid {$themeColors.btnBorder}"
@@ -141,7 +141,7 @@
             >
             <button
                 onclick={onResetGases}
-                class="px-1 py-0.5 rounded cursor-pointer text-sm"
+                class="px-4 py-1.25 rounded cursor-pointer text-sm"
                 style:background-color={$themeColors.btnBg}
                 style:color={$themeColors.btnText}
                 style:border="1px solid {$themeColors.btnBorder}"
@@ -149,7 +149,7 @@
             >
             <button
                 onclick={onClearAllGases}
-                class="px-1 py-0.5 rounded cursor-pointer text-sm"
+                class="px-4 py-1.25 rounded cursor-pointer text-sm"
                 style:background-color={$themeColors.btnBg}
                 style:color={$themeColors.btnText}
                 style:border="1px solid {$themeColors.btnBorder}"
@@ -157,7 +157,7 @@
             >
             <button
                 onclick={onCopyShare}
-                class="px-1 py-0.5 rounded cursor-pointer text-sm"
+                class="px-4 py-1.25 rounded cursor-pointer text-sm"
                 style:background-color={$themeColors.btnBg}
                 style:color={$themeColors.btnText}
                 style:border="1px solid {$themeColors.btnBorder}"
@@ -165,7 +165,7 @@
             >
             <button
                 onclick={onToggleMiniLegend}
-                class="px-1 py-0.5 rounded cursor-pointer text-sm"
+                class="px-4 py-1.25 rounded cursor-pointer text-sm"
                 style:background-color={$themeColors.btnBg}
                 style:color={$themeColors.btnText}
                 style:border="1px solid {$themeColors.btnBorder}"
@@ -173,7 +173,7 @@
             >
             <button
                 onclick={onToggleHelp}
-                class="px-1 py-0.5 rounded cursor-pointer text-sm"
+                class="px-4 py-1.25 rounded cursor-pointer text-sm"
                 style:background-color={$themeColors.btnBg}
                 style:color={$themeColors.btnText}
                 style:border="1px solid {$themeColors.btnBorder}">[?]</button
