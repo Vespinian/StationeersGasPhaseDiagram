@@ -935,6 +935,7 @@
     $effect(() => {
         void visibleGases;
         void showGrid;
+        void showFreezeLines;
         void $theme;
         void viewTempMin;
         void viewTempMax;
