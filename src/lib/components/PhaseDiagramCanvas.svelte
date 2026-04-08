@@ -948,6 +948,8 @@
         void logXScale;
         void logScale;
         updateLockedPosition();
+        //fixes tooltip out of bound when going form hor to ver on mobile
+        updateHoverCursor(0);
     });
 </script>
 
