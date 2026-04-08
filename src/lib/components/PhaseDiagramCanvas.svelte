@@ -25,6 +25,7 @@
 
     interface Props {
         showGrid: boolean;
+        showFreezeLines: boolean;
         logScale: boolean;
         logXScale: boolean;
         invertPanY: boolean;
@@ -50,6 +51,7 @@
 
     let {
         showGrid,
+        showFreezeLines,
         logScale,
         logXScale,
         invertPanY,
@@ -306,6 +308,7 @@
             const color = gasColors[key];
 
             if (
+                showFreezeLines &&
                 Math.ceil(gas.meltK) >= viewTempMin &&
                 Math.ceil(gas.meltK) < viewTempMax
             ) {

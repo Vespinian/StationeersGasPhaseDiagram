@@ -17,6 +17,7 @@ export interface SavedState {
     logScale?: boolean;
     logXScale?: boolean;
     invertPanY?: boolean;
+    showFreezeLines?: boolean;
     visibleGases?: Record<string, boolean>;
     viewTempMin?: number;
     viewTempMax?: number;
@@ -35,6 +36,7 @@ export interface SavedState {
     pmx?: number;
     lk?: boolean;
     lt?: number | null;
+    fl?: boolean;
 }
 
 export interface HoverValue {
@@ -125,6 +127,7 @@ export function loadState(): SavedState | null {
         if (urlState.pmx !== undefined) state.viewPressMax = urlState.pmx;
         if (urlState.lk !== undefined) state.isLocked = urlState.lk;
         if (urlState.lt !== undefined) state.lockedTemp = urlState.lt;
+        if (urlState.fl !== undefined) state.showFreezeLines = urlState.fl;
         return state;
     } else {
         const encodedLocalState = loadLocalState();
@@ -162,6 +165,7 @@ export function loadState(): SavedState | null {
             if (localState.lk !== undefined) state.isLocked = localState.lk;
             if (localState.lt !== undefined)
                 state.lockedTemp = localState.lt;
+            if (localState.fl !== undefined) state.showFreezeLines = localState.fl;
             return state;
         }
     }
@@ -272,6 +276,7 @@ export function saveState(
     logScale: boolean,
     logXScale: boolean,
     invertPanY: boolean,
+    showFreezeLines: boolean,
     isLocked: boolean,
     lockedTemp: number | null,
     visibleGases: Record<string, boolean>,
@@ -290,6 +295,7 @@ export function saveState(
     if (logScale !== false) state.ls = logScale;
     if (logXScale !== false) state.lx = logXScale;
     if (invertPanY !== true) state.ip = invertPanY;
+    if (showFreezeLines !== true) state.fl = showFreezeLines;
     if (isLocked !== false) state.lk = isLocked;
     if (lockedTemp !== null) state.lt = lockedTemp;
     if (viewTempMin >= HARD_TEMP_MIN || viewTempMax <= HARD_LOG_TEMP_MAX) {

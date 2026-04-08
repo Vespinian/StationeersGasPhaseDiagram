@@ -4,6 +4,7 @@
 
     interface Props {
         showGrid: boolean;
+        showFreezeLines: boolean;
         logScale: boolean;
         logXScale: boolean;
         invertPanY: boolean;
@@ -14,6 +15,7 @@
         shareText: string;
         urlGenerated: boolean;
         onShowGridChange: (v: boolean) => void;
+        onShowFreezeLinesChange: (v: boolean) => void;
         onLogScaleChange: (v: boolean) => void;
         onLogXScaleChange: (v: boolean) => void;
         onInvertPanYChange: (v: boolean) => void;
@@ -29,6 +31,7 @@
 
     let {
         showGrid,
+        showFreezeLines,
         logScale,
         logXScale,
         invertPanY,
@@ -39,6 +42,7 @@
         shareText,
         urlGenerated,
         onShowGridChange,
+        onShowFreezeLinesChange,
         onLogScaleChange,
         onLogXScaleChange,
         onInvertPanYChange,
@@ -70,6 +74,11 @@
     function handleInvertPanYChange(e: Event) {
         const target = e.target as HTMLInputElement;
         onInvertPanYChange(target.checked);
+    }
+
+    function handleShowFreezeLinesChange(e: Event) {
+        const target = e.target as HTMLInputElement;
+        onShowFreezeLinesChange(target.checked);
     }
 </script>
 
@@ -111,6 +120,14 @@
                     onchange={handleInvertPanYChange}
                 />
                 Invert Y Pan
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+                <input
+                    type="checkbox"
+                    checked={showFreezeLines}
+                    onchange={handleShowFreezeLinesChange}
+                />
+                Freeze Lines
             </label>
         </div>
         <div class="flex gap-2 md:gap-5 justify-center flex-wrap">

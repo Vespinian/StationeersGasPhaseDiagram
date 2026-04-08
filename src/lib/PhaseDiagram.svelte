@@ -30,6 +30,7 @@
     let logScale = $state(getSaved(saved, "logScale", false));
     let logXScale = $state(getSaved(saved, "logXScale", false));
     let invertPanY = $state(getSaved(saved, "invertPanY", true));
+    let showFreezeLines = $state(getSaved(saved, "showFreezeLines", true));
     let currentTheme = $state<Theme>(loadTheme());
 
     const themeColors = $derived(
@@ -153,6 +154,7 @@
             logScale,
             logXScale,
             invertPanY,
+            showFreezeLines,
             isLocked,
             null,
             visibleGases,
@@ -241,6 +243,7 @@
         void viewPressMin;
         void viewPressMax;
         void isLocked;
+        void showFreezeLines;
         if (initSave) {
             initSave = false;
             saveState(
@@ -248,6 +251,7 @@
                 logScale,
                 logXScale,
                 invertPanY,
+                showFreezeLines,
                 isLocked,
                 null,
                 visibleGases,
@@ -262,6 +266,7 @@
                 logScale,
                 logXScale,
                 invertPanY,
+                showFreezeLines,
                 isLocked,
                 null,
                 visibleGases,
@@ -280,6 +285,7 @@
                 logScale,
                 logXScale,
                 invertPanY,
+                showFreezeLines,
                 isLocked,
                 null,
                 visibleGases,
@@ -296,6 +302,7 @@
                     logScale,
                     logXScale,
                     invertPanY,
+                    showFreezeLines,
                     isLocked,
                     null,
                     visibleGases,
@@ -355,6 +362,7 @@
 
     <PhaseDiagramControls
         {showGrid}
+        {showFreezeLines}
         {logScale}
         {logXScale}
         {invertPanY}
@@ -365,6 +373,7 @@
         {shareText}
         {urlGenerated}
         onShowGridChange={(v) => (showGrid = v)}
+        onShowFreezeLinesChange={(v) => (showFreezeLines = v)}
         onLogScaleChange={(v) => (logScale = v)}
         onLogXScaleChange={(v) => (logXScale = v)}
         onInvertPanYChange={(v) => (invertPanY = v)}
@@ -383,6 +392,7 @@
 
     <PhaseDiagramCanvas
         {showGrid}
+        {showFreezeLines}
         {logScale}
         {logXScale}
         {invertPanY}
