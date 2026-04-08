@@ -80,7 +80,7 @@
     } = graphHelpers;
 
     const margin = { top: 40, right: 40, left: 80, bottom: 60 };
-    const tooltipWidth = 160;
+    const tooltipWidth = 180;
     const tooltipOffsetSmall = 15;
     const tooltipOffsetLarge = 60;
 

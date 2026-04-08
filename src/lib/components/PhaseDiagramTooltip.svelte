@@ -28,7 +28,7 @@
 
 {#if displayTemp !== null && displayValues.length > 0}
     <div
-        class="absolute rounded p-2 pointer-events-none w-40 z-10 box-border"
+        class="absolute rounded p-2 pointer-events-none w-45 z-10 box-border"
         style:left="{lockedTooltipX}px"
         style:top="{lockedTooltipY}px"
         style:background-color={$themeColors.tooltipBg}
