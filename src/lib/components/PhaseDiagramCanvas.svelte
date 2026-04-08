@@ -317,8 +317,8 @@
                 ctx.setLineDash([5, 5]);
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(scaleX(gas.meltK), margin.top);
-                ctx.lineTo(scaleX(gas.meltK), margin.top + plotHeight());
+                ctx.moveTo(scaleX(Math.ceil(gas.meltK)), scaleY(0));
+                ctx.lineTo(scaleX(Math.ceil(gas.meltK)), scaleY(6000));
                 ctx.stroke();
                 ctx.setLineDash([]);
             }
