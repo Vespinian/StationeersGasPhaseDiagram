@@ -48,13 +48,13 @@ export const LOCAL_STATE_KEY = 'stationeers-gas-diagram-local-state';
 export const THEME_KEY = 'stationeers-gas-diagram-theme';
 export const SHOW_MINI_LEGEND_KEY = 'stationeers-gas-diagram-show-mini-legend';
 
-export const HARD_TEMP_MIN = -4000;
+export const HARD_TEMP_MIN = -1500;
 export const HARD_TEMP_MAX = 4000;
 export const HARD_LOG_TEMP_MIN = 1;
 export const HARD_LOG_TEMP_MAX = 20000;
 
-export const HARD_PRESSURE_MIN = -6500;
-export const HARD_PRESSURE_MAX = 12500;
+export const HARD_PRESSURE_MIN = -4500;
+export const HARD_PRESSURE_MAX = 10000;
 export const HARD_LOG_PRESSURE_MIN = 1;
 export const HARD_LOG_PRESSURE_MAX = 50000;
 
