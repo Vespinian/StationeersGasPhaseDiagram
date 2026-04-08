@@ -290,6 +290,18 @@
             ctx.setLineDash([]);
         }
 
+        const zeroY = scaleY(0);
+        if (zeroY >= margin.top && zeroY <= margin.top + plotHeight()) {
+            ctx.strokeStyle = "#ff4444";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([8, 4]);
+            ctx.beginPath();
+            ctx.moveTo(margin.left, zeroY);
+            ctx.lineTo(margin.left + plotWidth(), zeroY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
         const y6mpa = scaleY(6000);
         if (y6mpa >= margin.top && y6mpa <= margin.top + plotHeight()) {
             ctx.strokeStyle = t.refLineRed;
@@ -317,8 +329,8 @@
                 ctx.setLineDash([5, 5]);
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(scaleX(Math.ceil(gas.meltK)), scaleY(0));
-                ctx.lineTo(scaleX(Math.ceil(gas.meltK)), scaleY(6000));
+                ctx.moveTo(scaleX(Math.ceil(gas.meltK)), zeroY);
+                ctx.lineTo(scaleX(Math.ceil(gas.meltK)), y6mpa);
                 ctx.stroke();
                 ctx.setLineDash([]);
             }
@@ -418,18 +430,6 @@
         ctx.moveTo(margin.left, margin.top + plotHeight());
         ctx.lineTo(margin.left + plotWidth(), margin.top + plotHeight());
         ctx.stroke();
-
-        const zeroY = scaleY(0);
-        if (zeroY >= margin.top && zeroY <= margin.top + plotHeight()) {
-            ctx.strokeStyle = "#ff4444";
-            ctx.lineWidth = 1;
-            ctx.setLineDash([8, 4]);
-            ctx.beginPath();
-            ctx.moveTo(margin.left, zeroY);
-            ctx.lineTo(margin.left + plotWidth(), zeroY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
 
         ctx.fillStyle = t.tickText;
         ctx.font = "14px sans-serif";
