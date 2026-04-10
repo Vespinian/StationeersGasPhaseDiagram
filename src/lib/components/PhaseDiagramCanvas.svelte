@@ -949,6 +949,16 @@
         void logScale;
         updateLockedPosition();
     });
+
+    $effect(() => {
+        void canvasWidth;
+        hoveredX = null;
+        hoveredTemp = null;
+        hoveredValues = [];
+        tooltipX = 0;
+        tooltipY = 0;
+        tooltipFlipped = false;
+    });
 </script>
 
 <div class="relative max-w-400 mx-auto">
